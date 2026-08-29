@@ -25,7 +25,7 @@
   --blur-lg: 18px;
 
   /* Lockup height plus the nav's vertical padding and the 1px border. */
-  --header-h: 104px;
+  --header-h: 113px;
 
   --shell: min(1180px, 92vw);
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -133,23 +133,24 @@ body::after {
 
 /* ---------- header ---------- */
 
+/* Opaque, not a fade. The old gradient dropped to 10% alpha at its lower edge,
+   so once the page scrolled underneath, content bled through and the bar stopped
+   reading as a header. A solid ground keeps it a header at every scroll offset. */
 .site-header {
   position: sticky;
   top: 0;
   z-index: 20;
-  backdrop-filter: blur(var(--blur-sm)) saturate(130%);
-  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(130%);
-  background: linear-gradient(180deg, rgba(4, 9, 26, 0.62), rgba(4, 9, 26, 0.10));
+  background: var(--navy-900);
   border-bottom: 1px solid rgba(150, 200, 255, 0.10);
 }
 .nav-wrap {
   display: flex; align-items: center; gap: 1.5rem;
-  padding: .85rem 0;
+  padding: .5rem 0;
 }
 .brand { display: flex; align-items: center; text-decoration: none; color: var(--ink); }
 /* The full lockup carries the wordmark and the Research | Innovation |
    Education line, so it needs real height to stay legible. */
-.brand-lockup { height: 76px; width: auto; display: block; }
+.brand-lockup { height: 96px; width: auto; display: block; }
 
 .site-nav { margin-left: auto; display: flex; gap: 1.6rem; }
 .site-nav a {
@@ -629,8 +630,8 @@ body:not(.page-index) h2 { margin-bottom: .9rem; }
 
 @media (max-width: 760px) {
   /* The lockup is wider than a phone header can hold beside the button. */
-  :root { --header-h: 74px; }
-  .brand-lockup { height: 46px; }
+  :root { --header-h: 84px; }
+  .brand-lockup { height: 58px; }
   .nav-wrap { justify-content: space-between; }
   .btn-sm { margin-left: auto; }
 }
