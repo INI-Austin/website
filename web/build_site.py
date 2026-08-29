@@ -278,8 +278,8 @@ PAGES["about"] = dict(
         + src("https://inifoundation.org/", "inifoundation.org") + "</p>"
         "<p>The foundation works across four commitments. Research funds and "
         "conducts studies in applied neuroscience, from spine and "
-        "motion-preserving technologies to brain-computer interfaces and "
-        "regenerative neuroscience. Innovation moves that work toward real "
+        "motion-preserving technologies to regenerative neuroscience. "
+        "Innovation moves that work toward real "
         "devices and clinical practice. Education runs public programming and "
         "trains students through its university chapters. Philanthropy "
         "supports patients and families living with neurological "
@@ -292,8 +292,68 @@ PAGES["about"] = dict(
 # ---- research overview ------------------------------------------------------
 PAGES["research"] = dict(
     title=f"Research | {SITE}",
-    desc="Ongoing research projects.",
-    body=coming_soon("Research"),
+    desc="One shared platform and four application tracks in applied "
+         "neuroscience.",
+    body=hero("Research", "One platform, four applications", "")
+    + section(
+        "", "",
+        "<p>Four research proposals came out of the chapter's first cohort. "
+        "Read together, three of them independently identified the same "
+        "central technical problem: recovering a neural signal in real time "
+        "while a stimulus is actively contaminating the recording, then "
+        "adjusting that stimulus based on what is sensed.</p>"
+        "<p>Rather than run four separate teams, the chapter is organized as "
+        "one shared platform with four application tracks. A core team builds "
+        "the real time sensing, artifact rejection, and control loop "
+        "framework. Each track applies it to a different condition and a "
+        "different stimulation modality. Solving the shared problem once "
+        "unblocks all four.</p>")
+    + section(
+        "Track A: Gamma sensory entrainment for early Alzheimer's disease", "",
+        "<p>Synchronized 40 Hz light and sound stimulation reduces amyloid and "
+        "tau pathology in animal models and has carried a fixed frequency "
+        "device to a pivotal human trial. Every deployed system is open loop: "
+        "it delivers a fixed frequency on a fixed schedule with no readout of "
+        "whether the brain is actually entraining, and individual response is "
+        "highly variable. This track builds the closed loop version, tracking "
+        "each participant's gamma response during a session and adapting "
+        "stimulation to it. Bench platform first, then a target engagement "
+        "pilot in healthy volunteers.</p>")
+    + section(
+        "Track B: Closed-loop temporal interference stimulation for "
+        "Parkinson's disease", "",
+        "<p>Transcranial temporal interference stimulation reaches deep brain "
+        "structures without surgery by crossing two kilohertz range fields "
+        "through scalp electrodes. Adaptive deep brain stimulation, which "
+        "titrates stimulation to the patient's own beta oscillations, received "
+        "its first FDA approval in 2025, but requires an implant. Every human "
+        "temporal interference study to date has run open loop. This track "
+        "combines them into the first noninvasive adaptive deep brain "
+        "neuromodulation system, beginning with subject specific field "
+        "modeling and control policy benchmarking.</p>")
+    + section(
+        "Track C: Pre-ictal detection and focused ultrasound for "
+        "drug-resistant epilepsy", "",
+        "<p>Roughly a third of people with epilepsy do not achieve seizure "
+        "freedom on medication, and fewer than one percent of those patients "
+        "are ever referred for surgery. This track develops seizure prediction "
+        "and focus localization from scalp EEG and heart rate variability, "
+        "then uses that prediction to target low intensity focused ultrasound, "
+        "with adenosine mediated inhibition as the candidate mechanism. Begins "
+        "with detection model development on public epilepsy datasets.</p>")
+    + section(
+        "Track D: Hyperflow, driving and measuring glymphatic clearance", "",
+        "<p>The glymphatic system is the brain's sleep dependent waste "
+        "clearance pathway, carrying amyloid beta and tau out of neural "
+        "tissue. Low intensity focused ultrasound enhances that clearance in "
+        "animal models with no tissue damage, and the MRI index most of the "
+        "field relies on to measure it has been shown to be confounded. This "
+        "track treats measurement and intervention as one loop: drive "
+        "clearance, measure whether it actually moved using physics grounded "
+        "imaging and a blood biomarker, and tune the next session.</p>")
+    + note("Track leads are chapter members who authored the underlying "
+           "proposals. Human studies are conducted under a faculty principal "
+           "investigator with UT Austin IRB approval."),
 )
 
 # ---- people -----------------------------------------------------------------
@@ -317,24 +377,25 @@ PAGES["people"] = dict(
                  bio="B.S. Biomedical Engineering Honors, class of 2028. "
                      "Designs ear-EEG electrodes and event-related potential "
                      "paradigms in Dr. José del R. Millán's Clinical "
-                     "Neuroprosthetics and Brain Interaction Lab. Founder of "
-                     "MoltGrid, an open-source AI agent infrastructure "
-                     "platform."),
+                     "Neuroprosthetics and Brain Interaction Lab. Co-founder "
+                     "and CTO of MoltGrid, an open-source AI agent "
+                     "infrastructure platform."),
         ], cols="compact"))
     + section(
         "Advisors", "",
         people_grid([
             dict(name="Dr. Jordan Amadio",
                  photo="assets/people/jordan-amadio.jpg",
-                 role='Affiliate Faculty, Department of Neurosurgery, '
-                      '<a href="https://dellmed.utexas.edu/directory/jordan-amadio">'
-                      'Dell Medical School</a>',
-                 bio="Board-certified neurosurgeon, NIH-funded investigator in "
-                     "Texas Robotics, and co-founder of the NeuroLaunch "
-                     "incubator. Director of neurosurgery at Neuralink and "
-                     "chief of spinal neurosurgery at the Olympia Neurological "
-                     "Institute. MD from Harvard and MIT, MBA from Harvard "
-                     "Business School."),
+                 role="Faculty Advisor for Research",
+                 bio='Affiliate faculty in the Department of Neurosurgery at '
+                     '<a href="https://dellmed.utexas.edu/directory/jordan-amadio">'
+                     'Dell Medical School</a>. Board-certified neurosurgeon, '
+                     "NIH-funded investigator in Texas Robotics, and "
+                     "co-founder of the NeuroLaunch incubator. Director of "
+                     "neurosurgery at Neuralink and chief of spinal "
+                     "neurosurgery at the Olympia Neurological Institute. MD "
+                     "from Harvard Medical School, MBA from Harvard Business "
+                     "School."),
             dict(name="Sidney Harris",
                  photo="assets/people/sidney-harris.jpg",
                  role="Faculty Advisor for Operations",
@@ -358,11 +419,10 @@ PAGES["join"] = dict(
     + section(
         "Recruiting status", "",
         f'<div class="status glass"><p class="status-line">'
-        f'<span class="dot"></span> Applications are <strong>closed</strong>.</p>'
+        f'<span class="dot"></span> Applications are <strong>open</strong>.</p>'
         f'<p>All applications, for both committee and research membership, are '
-        f'submitted through a single Google Form. It is linked here when the '
-        f'cycle opens, and nowhere else. Next cycle opens '
-        f'{pending("date to be announced")}.</p></div>')
+        f'submitted through a single Google Form. '
+        f'<a href="{APPLY_URL}">Apply here</a>.</p></div>')
     + section(
         "The three tiers", "",
         deflist([
@@ -393,11 +453,8 @@ PAGES["join"] = dict(
         "<li>No prior research experience is required.</li></ul>")
     + section(
         "How to apply",
-        "One Google Form covers both applications. What the form asks, how many "
-        "rounds follow it, and who reviews it are still being decided.",
-        f'<p>{proposed("A likely shape: an application plus a research preference form where you rank the projects you want, opening in the first week of the term.")}</p>'
-        + note("Whatever the process ends up being, it gets published here "
-               "before the form opens, not after."))
+        "One Google Form covers both applications.",
+        f'<p><a class="btn" href="{APPLY_URL}">Apply</a></p>')
     + section(
         "What is asked of you",
         "The chapter fixes one of these. The rest are unset.",
@@ -467,8 +524,8 @@ PAGES["join"] = dict(
             ("Is there a fee?",
              "No. There are no dues at any tier and all programming is free."),
             ("How do I apply?",
-             "Through a Google Form, linked in the recruiting status box above "
-             "when the cycle opens."),
+             "Through a Google Form, linked in the recruiting status box "
+             f'above. <a href="{APPLY_URL}">Apply here</a>.'),
             ("What is the difference between committee and research?",
              "Committee membership is the leadership track: it leads to a Vice "
              "President position and potentially to President. Research "
@@ -482,13 +539,17 @@ PAGES["join"] = dict(
              "Fellows across two to three projects. The chapter does not "
              "publish an acceptance rate because it does not have one yet."),
             ("Do you run experiments on people?",
-             "No. Nothing the chapter has scoped involves human subjects, "
-             "stimulation, or animal work. See the "
-             '<a href="research.html">research page</a>.'),
+             "Some projects do. Current tracks include noninvasive stimulation "
+             "and studies with human volunteers. All human and animal work is "
+             "conducted under a faculty principal investigator with UT Austin "
+             "IRB approval, which is required before any data collection "
+             "begins. See the "
+             '<a href="research.html">research page</a> for what each track '
+             "involves."),
             ("Can I propose my own question?",
              "Yes, at any tier."),
         ]))
-    + note("Last updated 22 August 2026."),
+    + note("Last updated 29 August 2026."),
 )
 
 # ---- education --------------------------------------------------------------
@@ -553,8 +614,8 @@ PAGES["education"] = dict(
         '<a href="events.html">events</a> page as they are set.</p>')
     + note("The tractography on the home page was reconstructed from a chapter "
            "member's own diffusion MRI, using the pipeline the sixth session "
-           "above would cover. The chapter can teach this because it has "
-           "already done it."),
+           "above would cover. A chapter member has already done this work, "
+           "which is why it can be taught here."),
 )
 
 # ---- outreach ---------------------------------------------------------------
@@ -595,6 +656,10 @@ PAGES["events"] = dict(
     desc="Chapter events calendar.",
     body=section(
         "Events", "",
+        # Visible by default and hidden by JS once EVENTS has entries, so the
+        # page still reads correctly with no script.
+        '<p class="empty" id="events-empty">Events for the fall term are being '
+        'scheduled.</p>'
         '<div class="week-strip" id="week-strip" aria-label="This week"></div>')
     + section(
         "", "",

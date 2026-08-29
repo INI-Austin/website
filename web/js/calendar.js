@@ -107,6 +107,18 @@
   if (prev) prev.addEventListener("click", function () { step(-1); });
   if (next) next.addEventListener("click", function () { step(1); });
 
+  /* With nothing scheduled anywhere, month arrows are controls that lead to
+     more of the same emptiness, so hide them and leave the notice standing.
+     They come back as soon as EVENTS has a single entry. */
+  function renderEmptyState() {
+    var notice = document.getElementById("events-empty");
+    var isEmpty = EVENTS.length === 0;
+    if (notice) notice.hidden = !isEmpty;
+    if (prev) prev.hidden = isEmpty;
+    if (next) next.hidden = isEmpty;
+  }
+
   renderWeek();
   renderMonth();
+  renderEmptyState();
 })();
