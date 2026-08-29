@@ -236,7 +236,7 @@ PAGES["index"] = dict(
       <div class="splash-copy">
         <h1 class="splash-title">INI Austin</h1>
         <p class="splash-sub">We are currently recruiting top talent for our
-          2025-2026 research cohort.</p>
+          2026-2027 research cohort.</p>
         <div class="hero-actions">
           <a class="btn" href="{APPLY_URL}">Apply</a>
           <a class="btn btn-ghost" href="contact.html">Contact us</a>
@@ -779,7 +779,7 @@ SHELL = """<!DOCTYPE html>
 <header class="site-header">
   <div class="shell nav-wrap">
     <a class="brand" href="index.html">
-      <img class="brand-lockup" src="assets/ini-logo-white.png"
+      <img class="brand-lockup" src="assets/ini-logo-white.svg"
            alt="Institute of Neuro Innovation Austin" />
     </a>
     <nav class="site-nav" aria-label="Main">{nav}</nav>
