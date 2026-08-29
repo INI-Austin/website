@@ -36,8 +36,8 @@ NAV = [
 ]
 
 # The Apply button goes straight to the interest form rather than to a page
-# about applying. Set this to the live Google Form URL.
-APPLY_URL = "join.html"
+# about applying. Both the header button and the home splash button read this.
+APPLY_URL = "https://forms.gle/ZNLXi8C9ecE9Mq2SA"
 
 FOOTER_COLS = [
     ("Chapter", [
