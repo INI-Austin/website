@@ -1,0 +1,30 @@
+.DS_Store
+.ruff_cache/
+*.pyc
+
+# Local render pipeline: a virtualenv and multi-hundred-MB diffusion MRI
+# intermediates that are not needed to build or serve the site. The baked
+# outputs the site actually loads live in web/data/.
+render/.venv/
+render/out/
+render/work/
+render/__pycache__/
+
+# Source imagery and slide decks, not part of the deployed site.
+slides/
+*.trk.gz
+*.nii.gz
+*.npz
+
+# Chapter governance papers and internal working documents. They record what
+# the chapter is still deciding and what officers have been told in private,
+# so they stay out of a public repository.
+/*.pdf
+/NOTES.md
+/DOMAIN.md
+/SITEMAP.md
+brand/source/*.txt
+brand/research/
+
+# Screenshot scratch
+web/shots/

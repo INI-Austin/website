@@ -1,0 +1,769 @@
+/* INI Austin mockup.
+ *
+ * Palette is one navy hue held across every neutral, so the glass surfaces
+ * read as tinted panes over the cortex field rather than as grey boxes. Blur
+ * is deliberately restricted to two values; stacking many different backdrop
+ * filters is what makes a glass interface look like a template and costs the
+ * most to composite.
+ */
+
+:root {
+  --navy-900: #04091a;
+  --navy-800: #071230;
+  --navy-700: #0b1d45;
+  --navy-600: #123063;
+  --ink: #f2f7ff;
+  --ink-dim: #a9bde0;
+  --cyan: #7fe3ff;
+  --azure: #4c9bff;
+
+  --glass-bg: rgba(10, 26, 60, 0.34);
+  --glass-bg-strong: rgba(8, 20, 48, 0.58);
+  --glass-line: rgba(150, 200, 255, 0.20);
+  --glass-sheen: rgba(190, 225, 255, 0.42);
+  --blur-sm: 4px;
+  --blur-lg: 18px;
+
+  /* Lockup height plus the nav's vertical padding and the 1px border. */
+  --header-h: 104px;
+
+  --shell: min(1180px, 92vw);
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--navy-900);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Cortex backdrop: the rendered surface, repeating, held well back. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-color: var(--navy-900);
+  background-image: url("../data/cortex-tile.png");
+  background-repeat: repeat;
+  background-size: 760px 760px;
+  opacity: 0.72;
+}
+
+/* Quiet the copy side and dissolve the anatomy into the page at the edges. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg,
+      rgba(4, 9, 26, 0.92) 0%,
+      rgba(4, 9, 26, 0.74) 34%,
+      rgba(4, 9, 26, 0.22) 66%,
+      rgba(4, 9, 26, 0.40) 100%),
+    linear-gradient(180deg,
+      rgba(4, 9, 26, 0.28) 0%,
+      rgba(4, 9, 26, 0.04) 44%,
+      rgba(4, 9, 26, 0.72) 100%);
+}
+
+@media (max-width: 760px) {
+  body::before {
+    background-size: 520px 520px;
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  body::before { opacity: 0.34; }
+}
+
+.shell { width: var(--shell); margin: 0 auto; }
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+}
+.skip-link:focus {
+  left: 1rem; top: 1rem; z-index: 50;
+  padding: .6rem 1rem; border-radius: 10px;
+  background: var(--navy-700); color: var(--ink);
+}
+
+/* ---------- glass primitive ---------- */
+
+.glass {
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-lg)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(150%);
+  border: 1px solid var(--glass-line);
+  border-radius: 18px;
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
+    0 20px 60px -20px rgba(0, 0, 0, 0.7);
+}
+
+/* The bright top edge is what sells a pane as glass: it is the specular line
+   where the sheet catches the light, not a border. */
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  border-radius: 18px 18px 0 0;
+  background: linear-gradient(90deg,
+    transparent, var(--glass-sheen) 22%, var(--glass-sheen) 78%, transparent);
+  opacity: .8;
+  pointer-events: none;
+}
+
+/* ---------- header ---------- */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(var(--blur-sm)) saturate(130%);
+  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(130%);
+  background: linear-gradient(180deg, rgba(4, 9, 26, 0.62), rgba(4, 9, 26, 0.10));
+  border-bottom: 1px solid rgba(150, 200, 255, 0.10);
+}
+.nav-wrap {
+  display: flex; align-items: center; gap: 1.5rem;
+  padding: .85rem 0;
+}
+.brand { display: flex; align-items: center; text-decoration: none; color: var(--ink); }
+/* The full lockup carries the wordmark and the Research | Innovation |
+   Education line, so it needs real height to stay legible. */
+.brand-lockup { height: 76px; width: auto; display: block; }
+
+.site-nav { margin-left: auto; display: flex; gap: 1.6rem; }
+.site-nav a {
+  color: var(--ink-dim); text-decoration: none; font-size: .93rem;
+  padding: .3rem 0; border-bottom: 1px solid transparent; transition: color .2s, border-color .2s;
+}
+.site-nav a:hover { color: var(--ink); border-bottom-color: var(--cyan); }
+
+.btn {
+  display: inline-block; padding: .62rem 1.15rem; border-radius: 12px;
+  font-size: .92rem; font-weight: 600; text-decoration: none; cursor: pointer;
+  color: var(--navy-900); background: linear-gradient(180deg, #a9ecff, var(--cyan));
+  border: 1px solid rgba(255,255,255,.35);
+  box-shadow: 0 8px 24px -10px rgba(127,227,255,.8);
+}
+.btn-ghost {
+  color: var(--ink); background: rgba(255,255,255,.06);
+  border: 1px solid var(--glass-line); box-shadow: none;
+  backdrop-filter: blur(var(--blur-sm));
+  -webkit-backdrop-filter: blur(var(--blur-sm));
+}
+
+/* ---------- hero ---------- */
+
+.hero {
+  position: relative;
+  min-height: 92vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: 2.5rem;
+  padding: 4rem 0 5rem;
+}
+
+/* The folds run right under the headline, so the copy carries its own soft
+   scrim rather than dimming the whole backdrop. Sized generously and fully
+   feathered so there is no visible edge. */
+.hero-copy { max-width: 33rem; position: relative; }
+.hero-copy::before {
+  content: "";
+  position: absolute;
+  inset: -3rem -6rem -3rem -4rem;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(75% 65% at 38% 50%,
+    rgba(4, 9, 26, 0.80), rgba(4, 9, 26, 0.55) 45%, rgba(4, 9, 26, 0) 78%);
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: .78rem; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--cyan); margin: 0 0 1rem;
+}
+
+h1 {
+  font-size: clamp(2.3rem, 4.6vw, 3.5rem);
+  line-height: 1.06; letter-spacing: -.02em; font-weight: 700;
+  margin: 0 0 1.1rem;
+}
+h1 em { font-style: normal; color: var(--cyan); }
+
+.lede { color: var(--ink-dim); font-size: 1.06rem; margin: 0 0 1.8rem; }
+
+.hero-actions { display: flex; gap: .8rem; flex-wrap: wrap; }
+
+.hero-stage { position: relative; aspect-ratio: 1 / 1; min-height: 340px; }
+#fibers {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+#fibers.is-on { opacity: 1; }
+#fibers.is-failed { display: none; }
+
+.stage-caption {
+  position: absolute; left: 0; bottom: -.4rem;
+  font-family: var(--font-mono); font-size: .72rem;
+  color: rgba(169, 189, 224, .75); letter-spacing: .04em;
+}
+
+/* ---------- home splash ---------- */
+
+/* The home page is the name, two ways in, and the tractography. No sections,
+   no cards, nothing to scroll past. */
+/* Fills the viewport below the header so the footer never peeks in before a
+   scroll. --header-h tracks the lockup height plus its padding. */
+.splash {
+  position: relative;
+  min-height: calc(100vh - var(--header-h));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: 2.5rem;
+  padding: 0 0 2rem;
+}
+.splash-copy { position: relative; max-width: 34rem; }
+.splash-copy::before {
+  content: "";
+  position: absolute;
+  inset: -3rem -6rem -3rem -4rem;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(75% 65% at 38% 50%,
+    rgba(4, 9, 26, 0.80), rgba(4, 9, 26, 0.55) 45%, rgba(4, 9, 26, 0) 78%);
+}
+.splash-title {
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  line-height: 1.02; letter-spacing: -.03em; font-weight: 700;
+  margin: 0 0 1rem;
+}
+.splash-sub {
+  color: var(--ink-dim); font-size: 1.1rem; line-height: 1.55;
+  margin: 0 0 2rem; max-width: 26rem;
+}
+
+@media (max-width: 900px) {
+  .splash { grid-template-columns: 1fr; min-height: 0; padding-top: 1.5rem; }
+  .splash .hero-stage { order: -1; min-height: 300px; }
+}
+
+/* ---------- sections ---------- */
+
+section { padding: 5rem 0; }
+
+h2 {
+  font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+  letter-spacing: -.015em; margin: 0 0 .7rem; font-weight: 680;
+}
+.section-lede { color: var(--ink-dim); max-width: 46rem; margin: 0 0 2.5rem; }
+
+.cards { display: grid; gap: 1.1rem; }
+.three { grid-template-columns: repeat(3, 1fr); }
+.two { grid-template-columns: repeat(2, 1fr); }
+
+.card { padding: 1.6rem 1.5rem; }
+.card h3 { margin: 0 0 .5rem; font-size: 1.06rem; font-weight: 640; }
+.card p { margin: 0; color: var(--ink-dim); font-size: .95rem; }
+.card .tag {
+  display: inline-block; margin-bottom: .8rem;
+  font-family: var(--font-mono); font-size: .68rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--cyan);
+}
+
+.stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.1rem; }
+.stat { padding: 1.4rem 1.3rem; }
+.stat .n {
+  display: block; font-size: 2rem; font-weight: 700; letter-spacing: -.02em;
+  line-height: 1.1; margin-bottom: .3rem;
+}
+.stat .l { font-size: .86rem; color: var(--ink-dim); }
+
+.ladder { padding: 2.2rem; }
+.ladder ol { margin: 0; padding-left: 0; list-style: none; counter-reset: step; }
+.ladder li {
+  counter-increment: step; position: relative;
+  padding: 0 0 1.5rem 3.1rem;
+  border-left: 1px solid rgba(150, 200, 255, .16);
+  margin-left: .9rem;
+}
+.ladder li:last-child { border-left-color: transparent; padding-bottom: 0; }
+.ladder li::before {
+  content: counter(step);
+  position: absolute; left: -.92rem; top: -.15rem;
+  width: 1.8rem; height: 1.8rem; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: .78rem;
+  color: var(--navy-900); background: linear-gradient(180deg, #a9ecff, var(--cyan));
+}
+.ladder h4 { margin: 0 0 .25rem; font-size: 1rem; font-weight: 640; }
+.ladder p { margin: 0; color: var(--ink-dim); font-size: .93rem; }
+
+/* Solid band, not a translucent panel: the cortex field is fixed behind the
+   whole page, and letting it show through the footer made the densest part of
+   the page also the busiest. */
+.site-footer {
+  position: relative;
+  background: var(--navy-800);
+  padding: 1.1rem 0 1rem;
+  border-top: 1px solid rgba(150, 200, 255, .10);
+  color: var(--ink-dim); font-size: .84rem;
+}
+.footer-row { display: flex; gap: .9rem; flex-wrap: wrap; align-items: center; }
+.site-footer a { color: var(--ink-dim); text-decoration: none; }
+.site-footer a:hover { color: var(--ink); }
+
+/* A note is an aside, not a warning. The amber treatment is reserved for
+   pending(), which is the only thing on the site that must not read as fact. */
+.note {
+  margin-top: 2rem; padding: .9rem 1.2rem; border-radius: 12px;
+  border-left: 2px solid rgba(150, 200, 255, .28);
+  background: rgba(150, 200, 255, .04);
+  color: var(--ink-dim); font-size: .88rem;
+}
+.note a { color: var(--cyan); }
+
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; padding-top: 2rem; }
+  .hero-stage { order: -1; min-height: 300px; }
+  .three, .two, .stat-row { grid-template-columns: 1fr 1fr; }
+  .nav-wrap { flex-wrap: wrap; row-gap: .6rem; }
+  .site-nav {
+    order: 3; width: 100%; margin-left: 0; gap: 1.2rem;
+    overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .site-nav::-webkit-scrollbar { display: none; }
+  .site-nav a { white-space: nowrap; }
+}
+@media (max-width: 560px) {
+  .three, .two, .stat-row { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--glass-bg-strong); }
+}
+
+#fibers { cursor: grab; }
+#fibers.is-grabbing { cursor: grabbing; }
+
+/* ==========================================================================
+   Components added for the full site. Everything below is used by more than
+   one page; anything single-use stays inline in build_site.py.
+   ========================================================================== */
+
+/* ---------- pending ---------- */
+
+/* The one amber thing on the site. If a fact is not confirmed it has to look
+   different from a fact, at a glance, without hovering. */
+.pending {
+  color: #ffd08a;
+  border-bottom: 1px dashed rgba(255, 208, 138, .55);
+  cursor: help;
+}
+
+/* ---------- interior hero ---------- */
+
+.hero--plain {
+  display: block;
+  padding: 4.5rem 0 1rem;
+  min-height: 0;
+}
+.hero--plain .hero-copy { max-width: 44rem; }
+.hero--plain .hero-copy::before { display: none; }
+.hero--plain h1 { font-size: clamp(2.1rem, 4.4vw, 3.1rem); }
+
+.btn-sm { padding: .5rem 1rem; font-size: .86rem; }
+
+.site-nav a[aria-current="page"] {
+  color: var(--ink);
+  border-bottom-color: var(--cyan);
+}
+
+.card-link { margin-top: .9rem !important; }
+.card-link a { color: var(--cyan); text-decoration: none; font-size: .9rem; }
+.card-link a:hover { text-decoration: underline; }
+
+/* ---------- prose ---------- */
+
+section p { color: var(--ink-dim); line-height: 1.65; max-width: 46rem; }
+section p + p { margin-top: 1rem; }
+section a { color: var(--cyan); }
+
+ul.plain { list-style: none; padding: 0; margin: 0; max-width: 46rem; }
+ul.plain li {
+  color: var(--ink-dim); line-height: 1.6; font-size: .95rem;
+  padding: .55rem 0 .55rem 1.4rem; position: relative;
+}
+ul.plain li::before {
+  content: ""; position: absolute; left: 0; top: 1.05rem;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--azure);
+}
+
+.empty {
+  padding: 1.6rem 1.5rem; border-radius: 14px;
+  border: 1px dashed rgba(150, 200, 255, .22);
+  background: rgba(10, 26, 60, .22);
+  font-size: .95rem;
+}
+
+/* ---------- table ---------- */
+
+/* Wide tables scroll inside their own box. The page body never scrolls
+   sideways, which is the failure mode of a fixed-width layout on a phone. */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--glass-line);
+  border-radius: 16px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-sm));
+  -webkit-backdrop-filter: blur(var(--blur-sm));
+}
+.table-wrap table { width: 100%; border-collapse: collapse; font-size: .93rem; }
+.table-wrap th, .table-wrap td {
+  text-align: left; padding: .95rem 1.2rem; vertical-align: top;
+  border-bottom: 1px solid rgba(150, 200, 255, .10);
+}
+.table-wrap th {
+  font-weight: 620; font-size: .78rem; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-dim);
+  background: rgba(8, 20, 48, .35);
+  white-space: nowrap;
+}
+.table-wrap td { color: var(--ink-dim); }
+.table-wrap td:first-child { color: var(--ink); font-weight: 500; }
+.table-wrap tr:last-child td { border-bottom: 0; }
+
+/* ---------- definition list ---------- */
+
+.deflist { padding: .6rem 2rem; margin: 0; }
+.def {
+  display: grid; grid-template-columns: 15rem 1fr; gap: 1.5rem;
+  padding: 1.4rem 0; border-bottom: 1px solid rgba(150, 200, 255, .10);
+}
+.def:last-child { border-bottom: 0; }
+.deflist dt { font-weight: 600; color: var(--ink); font-size: .98rem; }
+.deflist dd {
+  margin: 0; color: var(--ink-dim); font-size: .94rem; line-height: 1.6;
+}
+.deflist dd a { color: var(--cyan); }
+
+/* ---------- people ---------- */
+
+/* Cards are centred as a group rather than stretched across the shell: with
+   two or three people a stretched grid leaves one card marooned. */
+.people-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, 280px);
+  gap: 1.4rem; justify-content: center;
+}
+
+/* Two-sided card. The button is the flip surface; .person-inner is what
+   actually rotates, and each face is absolutely positioned on top of it. */
+.person-flip {
+  appearance: none; border: 0; padding: 0; margin: 0; background: none;
+  font: inherit; color: inherit; text-align: left; cursor: pointer;
+  width: 280px; height: 430px; perspective: 1400px;
+}
+.person-inner {
+  position: relative; display: block; width: 100%; height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 620ms cubic-bezier(.2, .7, .2, 1);
+}
+.person-flip.is-flipped .person-inner { transform: rotateY(180deg); }
+.person-face {
+  position: absolute; inset: 0; display: block; overflow: hidden;
+  border-radius: 14px;
+  -webkit-backface-visibility: hidden; backface-visibility: hidden;
+}
+.person-back { transform: rotateY(180deg); }
+
+.person-flip:focus-visible { outline: none; }
+.person-flip:focus-visible .person-face { outline: 2px solid var(--cyan); outline-offset: 3px; }
+
+.person-photo {
+  display: block; width: 100%; height: 280px;
+  background: linear-gradient(150deg, var(--navy-600), var(--navy-800));
+  border-bottom: 1px solid var(--glass-line);
+  font-weight: 650; color: var(--cyan); font-size: 2.8rem;
+  line-height: 280px; text-align: center;
+}
+.person-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.person-body { display: block; padding: 1rem 1.2rem 1.2rem; }
+.person-name {
+  display: block; margin-bottom: .25rem;
+  font-size: 1.04rem; font-weight: 640; color: var(--ink);
+}
+.person .role, .person-face .role {
+  display: block; color: var(--cyan); font-size: .87rem; margin-bottom: .4rem;
+}
+.person-face .role a { color: inherit; }
+.person-face .meta {
+  display: block; font-family: var(--font-mono); font-size: .76rem;
+  letter-spacing: .04em; color: rgba(169, 189, 224, .7);
+}
+
+/* The back scrolls on its own so a long bio never resizes the card or the
+   grid around it. */
+.person-back-scroll {
+  display: block; height: 100%; overflow-y: auto;
+  padding: 1.3rem 1.35rem; box-sizing: border-box;
+  scrollbar-width: thin; scrollbar-color: rgba(150,200,255,.3) transparent;
+}
+.person-back-scroll::-webkit-scrollbar { width: 6px; }
+.person-back-scroll::-webkit-scrollbar-thumb {
+  background: rgba(150, 200, 255, .3); border-radius: 3px;
+}
+.person-bio {
+  display: block; margin-top: .5rem;
+  font-size: .9rem; line-height: 1.62; color: var(--ink-dim);
+}
+.person-bio a { color: var(--cyan); }
+
+@media (prefers-reduced-motion: reduce) {
+  .person-inner { transition: none; }
+}
+
+/* ---------- timeline ---------- */
+
+.timeline { list-style: none; margin: 0; padding: 1.6rem 2rem; }
+.timeline li {
+  display: grid; grid-template-columns: 11rem 1fr; gap: 1.5rem;
+  padding: 1.1rem 0; border-bottom: 1px solid rgba(150, 200, 255, .10);
+  align-items: baseline;
+}
+.timeline li:last-child { border-bottom: 0; }
+.timeline .when {
+  font-family: var(--font-mono); font-size: .8rem; letter-spacing: .04em;
+  color: var(--ink-dim);
+}
+.timeline .what { color: var(--ink-dim); font-size: .94rem; line-height: 1.6; }
+.timeline .what strong { color: var(--ink); font-weight: 600; }
+.timeline .what a { color: var(--cyan); }
+.timeline .is-past { opacity: .62; }
+
+/* ---------- recruiting status ---------- */
+
+.status { padding: 1.6rem 1.8rem; max-width: 46rem; }
+.status p { margin: 0; max-width: none; }
+.status p + p { margin-top: .5rem; font-size: .92rem; }
+.status-line { color: var(--ink) !important; font-size: 1.02rem; }
+.status-line strong { color: var(--cyan); font-weight: 640; }
+.dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: #ffd08a; margin-right: .5rem; vertical-align: middle;
+  box-shadow: 0 0 0 4px rgba(255, 208, 138, .14);
+}
+
+/* ---------- footer ---------- */
+
+.footer-cols {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.4rem;
+  padding-bottom: .9rem; margin-bottom: .8rem;
+  border-bottom: 1px solid rgba(150, 200, 255, .10);
+}
+.footer-cols h4 {
+  margin: 0 0 .4rem; font-size: .72rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink); font-weight: 620;
+}
+.footer-cols ul { list-style: none; margin: 0; padding: 0; }
+/* Tight leading: these are a link list, not body copy, so the default 1.6
+   line-height was doing most of the damage to the footer's height. */
+.footer-cols li { margin: 0; line-height: 1.55; }
+.footer-row {
+  justify-content: space-between; font-size: .78rem;
+  color: rgba(169, 189, 224, .75);
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 900px) {
+  .def, .timeline li { grid-template-columns: 1fr; gap: .4rem; }
+  .deflist { padding: .6rem 1.4rem; }
+  .timeline { padding: 1.2rem 1.4rem; }
+  .hero--plain { padding-top: 2.5rem; }
+}
+@media (max-width: 560px) {
+  .footer-row { justify-content: flex-start; gap: .4rem; }
+  .status { padding: 1.3rem 1.3rem; }
+}
+
+/* The People page is a centred roster, not a left-aligned document. The
+   max-width overrides matter: section p is capped at 46rem for readability,
+   which silently off-centres anything shorter than the shell. */
+.page-people .hero-copy { max-width: none; text-align: center; }
+.page-people .hero-copy p { max-width: none; }
+.page-people .hero-actions { justify-content: center; }
+.page-people h2,
+.page-people .section-lede { text-align: center; }
+.page-people .section-lede { max-width: 46rem; margin-left: auto; margin-right: auto; }
+
+/* Interior pages carry far less per section than the home page does, so the
+   home page's breathing room reads as dead space on them. */
+body:not(.page-index) section { padding: 3.25rem 0; }
+body:not(.page-index) section:first-of-type { padding-top: 1.5rem; }
+body:not(.page-index) .section-lede { margin-bottom: 1.8rem; }
+body:not(.page-index) h2 { margin-bottom: .9rem; }
+
+@media (max-width: 760px) {
+  /* The lockup is wider than a phone header can hold beside the button. */
+  :root { --header-h: 74px; }
+  .brand-lockup { height: 46px; }
+  .nav-wrap { justify-content: space-between; }
+  .btn-sm { margin-left: auto; }
+}
+
+/* A proposal is not a blank. Amber means "we expect this and have not checked
+   it"; the dotted grey means "somebody suggested this and nobody has agreed". */
+.proposed {
+  color: #b9c8e6;
+  border-bottom: 1px dotted rgba(185, 200, 230, .5);
+  cursor: help;
+}
+
+.src {
+  font-size: .82em; color: var(--azure) !important;
+  text-decoration: none; white-space: nowrap;
+}
+.src::before { content: "\2197 "; opacity: .7; }
+.src:hover { text-decoration: underline; }
+
+.banner {
+  display: flex; flex-direction: column; gap: .35rem;
+  padding: 1rem 1.2rem; border-radius: 12px; margin-bottom: 2rem;
+  font-size: .89rem; line-height: 1.55; max-width: 46rem;
+}
+.banner strong { font-weight: 620; }
+.banner span { color: var(--ink-dim); }
+.banner--draft {
+  border: 1px solid rgba(255, 208, 138, .32);
+  background: rgba(255, 208, 138, .07);
+}
+.banner--draft strong { color: #ffd08a; }
+.banner--source {
+  border: 1px solid rgba(76, 155, 255, .28);
+  background: rgba(76, 155, 255, .07);
+}
+.banner--source strong { color: var(--azure); }
+.banner a { color: var(--cyan); }
+
+.hint { color: rgba(169, 189, 224, .62); font-size: .85em; }
+
+/* ---------- events calendar ---------- */
+
+.week-strip {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: .5rem;
+  margin-bottom: 2.5rem;
+}
+.week-day {
+  display: flex; flex-direction: column; gap: .3rem;
+  padding: .9rem .7rem; min-height: 6rem;
+  border: 1px solid var(--glass-line); border-radius: 10px;
+  background: var(--glass-bg);
+}
+.week-day.is-today { border-color: var(--cyan); background: rgba(127,227,255,.07); }
+.week-dow {
+  font-family: var(--font-mono); font-size: .7rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-dim);
+}
+.week-num { font-size: 1.3rem; font-weight: 650; line-height: 1; }
+.week-day.is-today .week-num { color: var(--cyan); }
+.week-events { display: flex; flex-direction: column; gap: .25rem; margin-top: .2rem; }
+.week-event { font-size: .78rem; color: var(--ink); }
+.week-none { font-size: .78rem; color: rgba(169,189,224,.35); }
+
+.cal {
+  border: 1px solid var(--glass-line); border-radius: 14px;
+  background: var(--glass-bg); padding: 1.2rem 1.3rem 1.4rem;
+}
+.cal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.cal-title { margin: 0; font-size: 1.05rem; font-weight: 640; }
+.cal-nav {
+  appearance: none; cursor: pointer; font: inherit; font-size: 1rem;
+  width: 2rem; height: 2rem; border-radius: 8px;
+  background: rgba(255,255,255,.06); color: var(--ink);
+  border: 1px solid var(--glass-line);
+}
+.cal-nav:hover { background: rgba(255,255,255,.12); color: var(--cyan); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: .35rem; }
+.cal-dow {
+  font-family: var(--font-mono); font-size: .68rem; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-dim);
+  text-align: center; padding-bottom: .3rem;
+}
+.cal-cell {
+  min-height: 4.4rem; padding: .4rem .5rem; border-radius: 8px;
+  border: 1px solid rgba(150,200,255,.08);
+  display: flex; flex-direction: column; gap: .2rem;
+}
+.cal-cell.is-empty { border-color: transparent; }
+.cal-cell.is-today { border-color: var(--cyan); background: rgba(127,227,255,.07); }
+.cal-num { font-size: .82rem; color: var(--ink-dim); }
+.cal-cell.is-today .cal-num { color: var(--cyan); font-weight: 650; }
+.cal-event {
+  font-size: .72rem; color: var(--ink);
+  background: rgba(127,227,255,.14); border-radius: 4px; padding: .1rem .3rem;
+}
+
+@media (max-width: 760px) {
+  .week-strip { grid-template-columns: repeat(2, 1fr); }
+  .cal-cell { min-height: 3rem; }
+}
+
+/* ---------- contact form ---------- */
+
+.contact-form { display: block; max-width: 34rem; }
+.contact-form label {
+  display: block; margin: 1.1rem 0 .35rem;
+  font-size: .85rem; font-weight: 600; color: var(--ink);
+}
+.contact-form label:first-child { margin-top: 0; }
+.contact-form input,
+.contact-form textarea {
+  width: 100%; box-sizing: border-box;
+  padding: .65rem .8rem; border-radius: 9px;
+  background: rgba(255,255,255,.05); color: var(--ink);
+  border: 1px solid var(--glass-line);
+  font: inherit; font-size: .93rem;
+}
+.contact-form input:focus,
+.contact-form textarea:focus {
+  outline: none; border-color: var(--cyan);
+  background: rgba(255,255,255,.08);
+}
+.contact-form textarea { resize: vertical; }
+.contact-form .btn { margin-top: 1.3rem; border: 0; cursor: pointer; }
+.form-note {
+  margin: 1rem 0 0; font-size: .8rem; color: rgba(169,189,224,.75);
+}
+.form-note a { color: var(--cyan); }
+.form-confirm {
+  margin: .9rem 0 0; padding: .7rem .9rem; border-radius: 9px;
+  background: rgba(127,227,255,.10); border: 1px solid var(--glass-line);
+  font-size: .87rem; color: var(--ink);
+}
