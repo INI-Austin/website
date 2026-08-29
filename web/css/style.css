@@ -767,3 +767,34 @@ body:not(.page-index) h2 { margin-bottom: .9rem; }
   background: rgba(127,227,255,.10); border: 1px solid var(--glass-line);
   font-size: .87rem; color: var(--ink);
 }
+
+/* Visually hidden but available to screen readers. Used to give a page its
+   name in the accessibility tree when the design shows only a statement. */
+.vh {
+  position: absolute; width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  clip-path: inset(50%); overflow: hidden; white-space: nowrap;
+}
+
+/* Pages with nothing to show yet. One full screen of the cortex backdrop keeps
+   the footer below the fold, matching the home splash. */
+.coming-soon {
+  min-height: calc(100vh - var(--header-h));
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.coming-soon h1 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(2.4rem, 7.5vw, 5.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+/* Contact is a single form, so it reads better centred on the page than
+   flush-left like the content pages. The fields stay left-aligned. */
+.page-contact section { text-align: center; }
+.page-contact .contact-form { margin-inline: auto; text-align: left; }
+.page-contact .form-note { max-width: 34rem; margin-inline: auto; }

@@ -21,7 +21,7 @@ import re
 SITE = "INI Austin"
 ORG = "Institute of Neuro Innovation Austin"
 OUT = pathlib.Path(__file__).parent
-BASE_URL = "https://iniaustin.org"  # placeholder until the domain is bought
+BASE_URL = "https://iniaustin.org"
 BUILD_DATE = "2026-08-22"
 
 # Nav is deliberately short and fully visible at every width. Everything else
@@ -121,9 +121,18 @@ def hero(eyebrow, title_html, lede, actions=(), stage=False):
 
 def section(title, lede="", body="", ident=""):
     i = f' id="{ident}"' if ident else ""
-    l = f'<p class="section-lede">{lede}</p>' if lede else ""
+    lede_html = f'<p class="section-lede">{lede}</p>' if lede else ""
     t = f"<h2>{esc(title)}</h2>" if title else ""
-    return f'<section{i}>{t}{l}{body}</section>'
+    return f'<section{i}>{t}{lede_html}{body}</section>'
+
+
+def coming_soon(page_name):
+    """A page with nothing to show yet: one large statement over a full screen
+    of the cortex backdrop, so the footer stays below the fold. The page name is
+    spoken to screen readers but not drawn, since the nav already marks it."""
+    return ('<section class="coming-soon">'
+            f'<h1><span class="vh">{esc(page_name)}: </span>Coming Soon...</h1>'
+            '</section>')
 
 
 def cards(items, cols="three"):
@@ -284,13 +293,7 @@ PAGES["about"] = dict(
 PAGES["research"] = dict(
     title=f"Research | {SITE}",
     desc="Ongoing research projects.",
-    body=section(
-        "Research", "",
-        f'<p class="empty">Project pages go up when the President of Research '
-        f'adopts them, with the question, the lead, and the deliverable named '
-        f'from day one. Nothing is listed before then.</p>')
-    + note("Nothing on this site is medical advice, and nothing described here "
-           "diagnoses or treats any condition."),
+    body=coming_soon("Research"),
 )
 
 # ---- people -----------------------------------------------------------------
@@ -546,8 +549,8 @@ PAGES["education"] = dict(
         ]))
     + section(
         "Workshops", "",
-        f'<p class="empty">Workshop dates for the coming term are published on the '
-        f'<a href="events.html">events</a> page as they are set.</p>')
+        '<p class="empty">Workshop dates for the coming term are published on the '
+        '<a href="events.html">events</a> page as they are set.</p>')
     + note("The tractography on the home page was reconstructed from a chapter "
            "member's own diffusion MRI, using the pipeline the sixth session "
            "above would cover. The chapter can teach this because it has "
@@ -580,8 +583,8 @@ PAGES["outreach"] = dict(
         ]))
     + section(
         "Reported outcomes", "",
-        f'<p class="empty">No programs have run yet. When one does, it is '
-        f'listed here as program, date, site, and number of people reached.</p>')
+        '<p class="empty">No programs have run yet. When one does, it is '
+        'listed here as program, date, site, and number of people reached.</p>')
     + note("Outreach describes research. It does not offer screening, "
            "assessment, or advice about anyone's health."),
 )
@@ -611,9 +614,7 @@ PAGES["events"] = dict(
 PAGES["publications"] = dict(
     title=f"Publications | {SITE}",
     desc="Chapter publications.",
-    body=section(
-        "Publications", "",
-        '<p class="empty">Coming soon...</p>'),
+    body=coming_soon("Publications"),
 )
 
 # ---- contact ----------------------------------------------------------------
@@ -756,6 +757,15 @@ SHELL = """<!DOCTYPE html>
 <meta property="og:title" content="{title}" />
 <meta property="og:description" content="{desc}" />
 <meta property="og:type" content="website" />
+<meta property="og:url" content="{canonical}" />
+<meta property="og:site_name" content="INI Austin" />
+<meta property="og:image" content="{base}/assets/og-preview.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Institute of Neuro Innovation" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="{base}/assets/og-preview.png" />
+<link rel="canonical" href="{canonical}" />
 <link rel="icon" href="assets/ini-symbol-light.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -806,6 +816,9 @@ def render(slug: str, page: dict, cssv: str, jsv: str) -> str:
         desc=html.escape(page["desc"], quote=True),
         cssv=cssv, nav=nav_html(slug), body=page["body"],
         footer=footer_html(), scripts=scripts, jsonld=jsonld,
+        base=BASE_URL,
+        canonical=(BASE_URL + "/" if slug == "index"
+                   else f"{BASE_URL}/{slug}.html"),
         apply_url=APPLY_URL, bodycls=f' class="page-{slug}"')
 
 
@@ -815,6 +828,8 @@ def check_links(files: dict) -> list:
     bad = []
     for slug, doc in files.items():
         for href in re.findall(r'href="([^"#?]+\.html)[^"]*"', doc):
+            if href.startswith(("http://", "https://", "//")):
+                continue  # canonical/og URLs are absolute, not internal routes
             if href not in known:
                 bad.append(f"{slug}.html -> {href}")
     return bad
