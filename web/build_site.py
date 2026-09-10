@@ -24,15 +24,26 @@ OUT = pathlib.Path(__file__).parent
 BASE_URL = "https://iniaustin.org"
 BUILD_DATE = "2026-08-22"
 
+def route(slug: str) -> str:
+    """The URL a page is linked and indexed under.
+
+    GitHub Pages serves /about from about.html on its own, so the extension is
+    a detail of how the file is stored rather than part of the address. Note
+    there is no trailing slash: /about/ is a 404 there, and without one every
+    relative path in the page still resolves against the site root.
+    """
+    return "/" if slug == "index" else f"/{slug}"
+
+
 # Nav is deliberately short and fully visible at every width. Everything else
 # is reachable from the footer or from a parent page; nothing is orphaned.
 NAV = [
-    ("about.html", "About"),
-    ("research.html", "Research"),
-    ("people.html", "People"),
-    ("publications.html", "Publications"),
-    ("events.html", "Events"),
-    ("contact.html", "Contact"),
+    (route("about"), "About"),
+    (route("research"), "Research"),
+    (route("people"), "People"),
+    (route("publications"), "Publications"),
+    (route("events"), "Events"),
+    (route("contact"), "Contact"),
 ]
 
 # The Apply button goes straight to the interest form rather than to a page
@@ -41,20 +52,20 @@ APPLY_URL = "https://forms.gle/ZNLXi8C9ecE9Mq2SA"
 
 FOOTER_COLS = [
     ("Chapter", [
-        ("about.html", "About"),
-        ("people.html", "People"),
-        ("research.html", "Research"),
+        (route("about"), "About"),
+        (route("people"), "People"),
+        (route("research"), "Research"),
         (APPLY_URL, "Apply"),
     ]),
     ("Programs", [
-        ("education.html", "Education"),
-        ("outreach.html", "Outreach"),
-        ("events.html", "Events"),
+        (route("education"), "Education"),
+        (route("outreach"), "Outreach"),
+        (route("events"), "Events"),
     ]),
     ("More", [
-        ("publications.html", "Publications"),
-        ("contact.html", "Contact"),
-        ("privacy.html", "Privacy"),
+        (route("publications"), "Publications"),
+        (route("contact"), "Contact"),
+        (route("privacy"), "Privacy"),
     ]),
 ]
 
@@ -290,7 +301,7 @@ PAGES["index"] = dict(
           2026-2027 research cohort.</p>
         <div class="hero-actions">
           <a class="btn" href="{APPLY_URL}">Apply</a>
-          <a class="btn btn-ghost" href="contact.html">Contact us</a>
+          <a class="btn btn-ghost" href="/contact">Contact us</a>
         </div>
       </div>
       <div class="hero-stage"><canvas id="fibers" aria-label="White-matter
@@ -659,7 +670,7 @@ PAGES["education"] = dict(
     + section(
         "Workshops", "",
         '<p class="empty">Workshop dates for the coming term are published on the '
-        '<a href="events.html">events</a> page as they are set.</p>')
+        '<a href="/events">events</a> page as they are set.</p>')
     + note("The tractography on the home page was reconstructed from a chapter "
            "member's own diffusion MRI, using the pipeline the sixth session "
            "above would cover. A chapter member has already done this work, "
@@ -756,7 +767,7 @@ PAGES["contact"] = dict(
       <button class="btn" id="cf-send" type="submit">Send</button>
       <p class="form-note">This goes straight to the chapter mailbox. We use
         your name, email, subject, and message only to reply to you. See our
-        <a href="privacy.html">privacy notice</a>.</p>
+        <a href="/privacy">privacy notice</a>.</p>
       <p class="form-confirm" id="cf-confirm" hidden></p>
     </form>"""),
 )
@@ -776,12 +787,14 @@ PAGES["privacy"] = dict(
             ("Analytics", "None. No page views, sessions, or identifiers are "
                           "recorded."),
             ("Third-party requests",
-             "None while you read. Fonts, scripts, and images are served from "
-             "this site, and links to other sites are ordinary links that are "
-             "only followed if you click them. The one exception is the "
-             "contact form: pressing Send posts your message to FormSubmit, "
-             "which relays it to the chapter mailbox. Nothing is sent there "
-             "unless you press Send."),
+             "Fonts, scripts, and images are served from this site, and links "
+             "to other sites are ordinary links that are only followed if you "
+             "click them. Two pages reach further. The events page reads the "
+             "chapter's public Google Calendar from Google when it loads, "
+             "which sends Google the request the way visiting any page sends "
+             "its host a request. The contact form posts your message to "
+             "FormSubmit, which relays it to the chapter mailbox, and nothing "
+             "is sent there unless you press Send."),
             ("Server logs",
              "The host may keep standard access logs, which typically include IP "
              "address and user agent. The chapter does not read or analyze them."),
@@ -799,7 +812,7 @@ PAGES["privacy"] = dict(
              "member's own diffusion MRI, shared with their consent. No other "
              "person's imaging data appears on this site."),
         ]))
-    + footnote("Last updated 22 August 2026."),
+    + footnote("Last updated 10 September 2026."),
 )
 
 # ---- 404 --------------------------------------------------------------------
@@ -809,7 +822,7 @@ PAGES["404"] = dict(
     body=hero("404", "That page does not exist",
               "The link may be old, or it may be wrong. Everything on this site "
               "is reachable from the navigation above and the footer below.",
-              [("index.html", "Go to the home page"), ("research.html", "See the research")]),
+              [(route("index"), "Go to the home page"), (route("research"), "See the research")]),
 )
 
 
@@ -843,8 +856,8 @@ def asset_version(rel: str) -> str:
 def nav_html(current: str) -> str:
     out = []
     for href, label in NAV:
-        here = href == f"{current}.html" or (
-            current.startswith("research") and href == "research.html")
+        here = href == route(current) or (
+            current.startswith("research") and href == route("research"))
         cur = ' aria-current="page"' if here else ""
         out.append(f'<a href="{href}"{cur}>{esc(label)}</a>')
     return "".join(out)
@@ -910,7 +923,7 @@ SHELL = """<!DOCTYPE html>
 
 <header class="site-header">
   <div class="shell nav-wrap">
-    <a class="brand" href="index.html">
+    <a class="brand" href="/">
       <img class="brand-lockup" src="assets/ini-logo-white.svg"
            alt="Institute of Neuro Innovation Austin" />
     </a>
@@ -949,19 +962,18 @@ def render(slug: str, page: dict, cssv: str, jsv: str) -> str:
         cssv=cssv, nav=nav_html(slug), body=page["body"],
         footer=footer_html(), scripts=scripts, jsonld=jsonld,
         base=BASE_URL,
-        canonical=(BASE_URL + "/" if slug == "index"
-                   else f"{BASE_URL}/{slug}.html"),
+        canonical=BASE_URL + route(slug),
         apply_url=APPLY_URL, bodycls=f' class="page-{slug}"')
 
 
 def check_links(files: dict) -> list:
     """Every internal href must point at a page we actually wrote."""
-    known = {f"{s}.html" for s in files}
+    known = {route(s) for s in files} | {f"{s}.html" for s in files}
     bad = []
     for slug, doc in files.items():
-        for href in re.findall(r'href="([^"#?]+\.html)[^"]*"', doc):
-            if href.startswith(("http://", "https://", "//")):
-                continue  # canonical/og URLs are absolute, not internal routes
+        for href in re.findall(r'href="(/[^":?#]*|[^":?#/]+\.html)[^"]*"', doc):
+            if href.startswith("//"):
+                continue
             if href not in known:
                 bad.append(f"{slug}.html -> {href}")
     return bad
@@ -983,7 +995,7 @@ def main() -> None:
     priority = {"index": "1.0", "research": "0.9", "join": "0.9", "about": "0.8",
                 "people": "0.8", "publications": "0.7", "events": "0.7"}
     urls = "".join(
-        f"\n  <url><loc>{BASE_URL}/{'' if s == 'index' else s + '.html'}</loc>"
+        f"\n  <url><loc>{BASE_URL}{route(s)}</loc>"
         f"<lastmod>{BUILD_DATE}</lastmod>"
         f"<priority>{priority.get(s, '0.6')}</priority></url>"
         for s in sorted(docs) if s not in ("404", "privacy"))
@@ -999,9 +1011,10 @@ def main() -> None:
           f"0 broken internal links")
 
     orphans = set(docs) - {"index", "404"}
+    by_route = {route(slug): slug for slug in docs}
     for doc in docs.values():
-        for href in re.findall(r'href="([^"#?]+)\.html', doc):
-            orphans.discard(href)
+        for href in re.findall(r'href="(/[^":?#]*)"', doc):
+            orphans.discard(by_route.get(href, ""))
     if orphans:
         print("orphan pages (unreachable by link):", ", ".join(sorted(orphans)))
 
