@@ -121,7 +121,7 @@ def hero(eyebrow, title_html, lede, actions=(), stage=False):
     return f"""
     <section class="hero{'' if stage else ' hero--plain'}">
       <div class="hero-copy">
-        <p class="eyebrow">{esc(eyebrow)}</p>
+        {f'<p class="eyebrow">{esc(eyebrow)}</p>' if eyebrow else ''}
         <h1>{title_html}</h1>
         {f'<p class="lede">{esc(lede)}</p>' if lede else ''}
         <div class="hero-actions">{acts}</div>
@@ -361,7 +361,7 @@ PAGES["research"] = dict(
     title=f"Research | {SITE}",
     desc="Four neuromodulation tracks, an open index of neurotechnology, and "
          "an imaging direction.",
-    body=hero("Research", "Four pathways in neuromodulation", "")
+    body=hero("", "Four pathways in neuromodulation", "")
     + section(
         "", "",
         "<p>Four research proposals came out of the chapter's first cohort. "
@@ -564,7 +564,7 @@ PAGES["research"] = dict(
 PAGES["people"] = dict(
     title=f"People | {SITE}",
     desc="Executive board and advisors.",
-    body=hero("People", "Our team", "")
+    body=hero("", "Our team", "")
     + section(
         "Executive Board", "",
         people_grid([
