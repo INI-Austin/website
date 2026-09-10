@@ -44,7 +44,7 @@ FOOTER_COLS = [
         ("about.html", "About"),
         ("people.html", "People"),
         ("research.html", "Research"),
-        ("join.html", "Join"),
+        (APPLY_URL, "Apply"),
     ]),
     ("Programs", [
         ("education.html", "Education"),
@@ -173,6 +173,57 @@ def note(text):
     return f'<p class="note">{text}</p>'
 
 
+def footnote(text: str) -> str:
+    """A date or an aside at the foot of a page.
+
+    Deliberately not note(): a panel round one short line reads as though the
+    line matters more than the page it is under.
+    """
+    return f'<p class="footnote"><em>{esc(text)}</em></p>'
+
+
+def plainlist(items) -> str:
+    """Term and explanation as running text, with no panel around it."""
+    out = "".join(f"<dt>{esc(a)}</dt><dd>{b}</dd>" for a, b in items)
+    return f'<dl class="plainlist">{out}</dl>'
+
+
+def figure(path: str, alt: str, caption: str = "", cls: str = "",
+           href: str = "") -> str:
+    """An image and what it actually is.
+
+    `caption` is HTML so it can carry the credit link a licence requires. Alt
+    text is for someone who cannot see the image, the caption is for everyone,
+    so they say different things rather than repeating each other. Given an
+    `href` the image becomes the link, since a screenshot of a site the reader
+    can open is a thing they will try to click.
+    """
+    cap = f"<figcaption>{caption}</figcaption>" if caption else ""
+    img = (f'<img src="{esc(path)}" alt="{esc(alt)}" loading="lazy" '
+           f'decoding="async">')
+    if href:
+        cls = f"{cls} fig--link".strip()
+        img = (f'<a href="{esc(href)}" target="_blank" rel="noreferrer">'
+               f"{img}</a>")
+    return (f'<figure class="fig{f" {cls}" if cls else ""}">'
+            f"{img}{cap}</figure>")
+
+
+def viewer(caption: str, label: str, src: str, height: str = "") -> str:
+    """A figure you can turn, rather than a photograph of one.
+
+    Both of these are Aleph Neuro's own viewers in an iframe, one served from
+    their site and one vendored under web/viewer, so the page never redraws
+    their physics itself. `height` is a CSS length the figure is pinned to.
+    """
+    style = f' style="--viewer-h: {height}"' if height else ""
+    return (f'<figure class="fig fig--wide">'
+            f'<div class="viewer"{style}>'
+            f'<iframe src="{esc(src)}" title="{esc(label)}" loading="lazy"'
+            ' allowfullscreen referrerpolicy="no-referrer"></iframe>'
+            f'</div><figcaption>{caption}</figcaption></figure>')
+
+
 def people_grid(rows, cols="three"):
     """Name, role and bio are HTML, so pending() may be used in any of them.
 
@@ -290,11 +341,16 @@ PAGES["about"] = dict(
 )
 
 # ---- research overview ------------------------------------------------------
+# Full width copy with the figure centred beneath it, rather than copy squeezed
+# into half a column beside a small image. Both viewers are live and both are
+# Aleph Neuro's: the transcranial wave is embedded from their site, the ULM
+# volume is their MIT licensed viewer vendored under web/viewer/ulm and fed the
+# track binary they published.
 PAGES["research"] = dict(
     title=f"Research | {SITE}",
-    desc="One shared platform and four application tracks in applied "
-         "neuroscience.",
-    body=hero("Research", "One platform, four applications", "")
+    desc="Four neuromodulation tracks, an open index of neurotechnology, and "
+         "an imaging direction.",
+    body=hero("Research", "Four pathways in neuromodulation", "")
     + section(
         "", "",
         "<p>Four research proposals came out of the chapter's first cohort. "
@@ -317,8 +373,21 @@ PAGES["research"] = dict(
         "whether the brain is actually entraining, and individual response is "
         "highly variable. This track builds the closed loop version, tracking "
         "each participant's gamma response during a session and adapting "
-        "stimulation to it. Bench platform first, then a target engagement "
-        "pilot in healthy volunteers.</p>")
+        "stimulation to it.</p>"
+        + steps([
+            ("Platform and sensing",
+             "Build the synchronized light and sound stimulator, the EEG "
+             "chain, and the controller between them, then recover the gamma "
+             "response while the stimulus is still running."),
+            ("Control policy",
+             "Develop and benchmark the policy that moves frequency and "
+             "intensity within a session, against a fixed frequency "
+             "baseline."),
+            ("Feasibility pilot",
+             "Compare adaptive stimulation against fixed 40 Hz and sham in "
+             "healthy adult volunteers, measured on gamma target engagement "
+             "rather than on a cognitive endpoint."),
+        ]))
     + section(
         "Track B: Closed-loop temporal interference stimulation for "
         "Parkinson's disease", "",
@@ -329,8 +398,23 @@ PAGES["research"] = dict(
         "its first FDA approval in 2025, but requires an implant. Every human "
         "temporal interference study to date has run open loop. This track "
         "combines them into the first noninvasive adaptive deep brain "
-        "neuromodulation system, beginning with subject specific field "
-        "modeling and control policy benchmarking.</p>")
+        "neuromodulation system.</p>"
+        + steps([
+            ("Platform and sensing",
+             "Build the steerable multi channel stimulator and a high density "
+             "EEG front end that can recover the beta biomarker during "
+             "kilohertz stimulation. Validate focus and steering in "
+             "individualized head models and in a head phantom."),
+            ("Target and policy",
+             "Determine which noninvasive signal tracks motor state best under "
+             "stimulation, then benchmark control policies in a subject "
+             "specific model in the loop testbed before running any of them on "
+             "people."),
+            ("Crossover pilot",
+             "Randomized, double blind, sham controlled crossover in "
+             "Parkinson's disease comparing closed loop, open loop and sham, "
+             "on motor score and on suppression of the biomarker."),
+        ]))
     + section(
         "Track C: Pre-ictal detection and focused ultrasound for "
         "drug-resistant epilepsy", "",
@@ -339,8 +423,34 @@ PAGES["research"] = dict(
         "are ever referred for surgery. This track develops seizure prediction "
         "and focus localization from scalp EEG and heart rate variability, "
         "then uses that prediction to target low intensity focused ultrasound, "
-        "with adenosine mediated inhibition as the candidate mechanism. Begins "
-        "with detection model development on public epilepsy datasets.</p>")
+        "with adenosine mediated inhibition as the candidate mechanism.</p>"
+        + steps([
+            ("Detection and localization",
+             "Train a model on scalp EEG and heart rate variability to detect "
+             "pre-ictal onset and localize the focus, using intracranial "
+             "recordings as ground truth where they exist."),
+            ("Parameter selection",
+             "A second model takes that detection and localization and selects "
+             "ultrasound parameters within fixed safety limits."),
+            ("Mechanism",
+             "Test whether the selected parameters release enough adenosine to "
+             "suppress seizure activity, and whether the suppression "
+             "disappears under A1 receptor blockade."),
+            ("Closed loop",
+             "Integrate detection and stimulation into one controller and "
+             "validate it on real time physiological input with the hardware "
+             "in the loop."),
+        ])
+        + viewer(
+            "Ultrasound crossing the skull from a transducer on the temple. "
+            "Red and blue are opposite phases of the pressure field, and the "
+            "skull scatters and delays all of it. Drag to turn the head. "
+            "Viewer by "
+            '<a href="https://alephneuro.com/blog/ultrasound-brain" '
+            'target="_blank" rel="noreferrer">Aleph Neuro</a>.',
+            "Simulated ultrasound propagating through a human head.",
+            src="https://alephneuro.com/wave/rdbu.html?embed=1",
+            height="min(74vh, 680px)"))
     + section(
         "Track D: Hyperflow, driving and measuring glymphatic clearance", "",
         "<p>The glymphatic system is the brain's sleep dependent waste "
@@ -351,9 +461,72 @@ PAGES["research"] = dict(
         "track treats measurement and intervention as one loop: drive "
         "clearance, measure whether it actually moved using physics grounded "
         "imaging and a blood biomarker, and tune the next session.</p>")
-    + note("Track leads are chapter members who authored the underlying "
-           "proposals. Human studies are conducted under a faculty principal "
-           "investigator with UT Austin IRB approval."),
+    + section(
+        "Beyond the four tracks", "",
+        "<p>Two pieces of work sit outside the platform. Neither is a "
+        "neuromodulation track: one is a tool the chapter already uses, and "
+        "one is an imaging direction.</p>")
+    + section(
+        "NeuroBase, an open index of neurotechnology", "",
+        "<p>NeuroBase is an automatically updated, open index of the "
+        "neurotechnology field. It carries research ranked by field normalized "
+        "citation impact, trials pulled from ClinicalTrials.gov with phase and "
+        "enrollment, device decisions from the openFDA database, private "
+        "financing parsed out of SEC Form D filings, and daily news. It was "
+        "built by a chapter member and is live at "
+        '<a href="https://neurobase-live.vercel.app/" target="_blank" '
+        'rel="noreferrer">neurobase-live.vercel.app</a>.</p>'
+        "<p>What it does not do yet is the interesting part. Search is keyword "
+        "matching, so it returns what matches rather than what matters. "
+        "Nothing in it models significance, so the index cannot tell a result "
+        "that moves the field from one that repeats it. There is no per reader "
+        "view, so everyone sees the same page. And what it holds on any "
+        "individual company is thin. Those four gaps are the work.</p>"
+        + figure("assets/research/neurobase-home.webp",
+                 "NeuroBase front page: a lead story on a thought-to-text "
+                 "brain-computer interface beside a column of the day's other "
+                 "neurotechnology headlines.",
+                 "NeuroBase, September 2026. Opens the live index.",
+                 cls="fig--framed fig--wide",
+                 href="https://neurobase-live.vercel.app/"))
+    + section(
+        "Transcranial ultrasound localization microscopy in the operating "
+        "room", "",
+        "<p>Ultrasound localization microscopy infuses microbubbles, gas cores "
+        "in lipid shells already approved as a clinical contrast agent, into "
+        "the bloodstream and tracks them one at a time as they pass through "
+        "the vasculature. Ultrasound normally cannot separate two things "
+        "closer together than about a wavelength. A single bubble blurs to "
+        "that width, but its centre can be fitted far more precisely, so "
+        "accumulating millions of positions builds a vascular map finer than "
+        "the wavelength that made it.</p>"
+        "<p>In June 2026 Aleph Neuro published the first three dimensional ULM "
+        "image of a living human brain acquired through an intact skull, and "
+        "released the reconstruction pipeline and the dataset under an MIT "
+        "licence.</p>"
+        "<p>The skull is the hard part of that result, and an operating room "
+        "is the one place it is already open. Intraoperative ultrasound is "
+        "routine in neurosurgery: it shows anatomy, it checks how much tumour "
+        "is left, and it corrects the drift that makes preoperative MRI "
+        "unreliable once the brain has shifted under an open skull. What it "
+        "does not give the surgeon is the microvasculature. The question is "
+        "whether the open pipeline can be adapted to that setting, where there "
+        "is no skull left to correct for.</p>"
+        + viewer(
+            "The vasculature of a living human brain, imaged through an "
+            "intact skull. Every dot is a microbubble, located to a fraction "
+            "of the ultrasound wavelength and moving along the vessel it was "
+            "recorded travelling down, coloured by how fast it was going, "
+            "from 0 to 38 mm/s. The vessels are the paths the bubbles trace "
+            "out. Drag to turn it, or use the buttons to zoom. Viewer and "
+            "track data by "
+            '<a href="https://github.com/alephneuro/microbubbles" '
+            'target="_blank" rel="noreferrer">Aleph Neuro</a>.',
+            "Ultrasound localization microscopy of a living human brain: "
+            "thousands of vessel segments traced in blue through red against "
+            "black, colour running from slow to fast flow.",
+            src="viewer/ulm/index.html",
+            height="min(78vh, 760px)")),
 )
 
 # ---- people -----------------------------------------------------------------
@@ -407,151 +580,6 @@ PAGES["people"] = dict(
 )
 
 # ---- join -------------------------------------------------------------------
-PAGES["join"] = dict(
-    title=f"Join | {SITE}",
-    desc="Three ways in, what each one is actually for, and how to apply.",
-    body=hero("Join", "Three ways in",
-              "General membership is open to any UT student. Committee and "
-              "research membership are both by application, and they lead to "
-              "different places.")
-    + banner("draft", "This page is not final.",
-             "The chapter is new and its application has not run once yet.")
-    + section(
-        "Recruiting status", "",
-        f'<div class="status glass"><p class="status-line">'
-        f'<span class="dot"></span> Applications are <strong>open</strong>.</p>'
-        f'<p>All applications, for both committee and research membership, are '
-        f'submitted through a single Google Form. '
-        f'<a href="{APPLY_URL}">Apply here</a>.</p></div>')
-    + section(
-        "The three tiers", "",
-        deflist([
-            ("General Member",
-             "Any currently enrolled UT student, any major, any class year. No "
-             "application, no obligation, no dues. Register and attend the "
-             "speaker series, workshops, and brain health programming."),
-            ("Committee Member",
-             "By application, serving on a standing committee under a Vice "
-             "President. The point of committee membership is leadership: it is "
-             "the principal pathway to becoming that Vice President, and from "
-             "there potentially President. It also helps a Research Fellow "
-             "application, though only somewhat. If research is what you want, "
-             "apply for research."),
-            ("Research Fellow",
-             "By application, reviewed by the President of Research. Open to any "
-             "class year, including juniors and seniors. Assigned to a project "
-             "team. This is the research track and it is the selective one."),
-        ]))
-    + section(
-        "Who is eligible", "",
-        "<ul class='plain'>"
-        "<li>Any currently enrolled UT Austin student, at every tier.</li>"
-        "<li>Any major. Members are welcome from every discipline whose "
-        "curiosity touches the nervous system.</li>"
-        "<li>Any class year. There is no first-year or second-year window on "
-        "Research Fellow applications; juniors and seniors are eligible.</li>"
-        "<li>No prior research experience is required.</li></ul>")
-    + section(
-        "How to apply",
-        "One Google Form covers both applications.",
-        f'<p><a class="btn" href="{APPLY_URL}">Apply</a></p>')
-    + section(
-        "What is asked of you",
-        "The chapter fixes one of these. The rest are unset.",
-        table(["Commitment", "Amount"], [
-            ["Written progress report",
-             "Due to your Research Lead one day before each project work "
-             "meeting, covering challenges faced, how they were addressed, and "
-             "goals for the coming week"],
-            ["Project work meeting", "Weekly"],
-            ["Hours per week", pending("Not set")],
-            ["Term length", pending("Not set")],
-            ["Deliverable", pending("Not set")],
-            ["Dues", "None, at any tier"],
-        ]))
-    + section(
-        "What you get", "",
-        "<ul class='plain'>"
-        "<li>A named project with a named lead.</li>"
-        "<li>Weekly review of your work by someone accountable for it.</li>"
-        "<li>Eligibility, on reaching junior standing, to apply for the national "
-        "INI research internship described below.</li></ul>"
-        "<p class='note'>The chapter does not promise publication acceptance, a "
-        "lab position, or graduate placement. Those depend on work and on other "
-        "people's decisions.</p>")
-    + section(
-        "The national research internship",
-        "Separate from this chapter and run by the national foundation. Every "
-        "detail in this section is quoted from the foundation's own page.",
-        table(["Detail", "What the foundation states"], [
-            ["Who runs it", "The Institute of Neuro Innovation, for members of "
-                            "its university chapters"],
-            ["Undergraduate eligibility",
-             "Junior standing or above, in the foundation's own words"],
-            ["Paid", "No. Unpaid and educational, with interns expected to "
-                     "pursue academic course credit through their home "
-                     "institution where applicable"],
-            ["Length", "Typically 6 to 10 weeks"],
-            ["Placement", "One primary research project, chosen on interests, "
-                          "skills, availability, and study needs. Remote or "
-                          "hybrid"],
-            ["Review", "Rolling, with an initial response in 5 to 7 business "
-                       "days. Not all applicants are placed"],
-            ["Timing", "Applications must be sent in the quarter before the "
-                       "internship"],
-            ["Deliverable", "One capstone deliverable, such as a research brief, "
-                            "infographic, or white paper, plus a Neuroscience "
-                            "Anthology reflection that may be published"],
-            ["Priority", "Given to active members of the chapter"],
-        ])
-        + note("The national foundation's "
-               + src("https://inifoundation.org/ucla-research-internship",
-                     "research internship")
-               + " is offered to the UCLA chapter. Whether INI Austin members "
-                 "are eligible on the same terms is "
-               + pending("not yet confirmed") + "."))
-    + section(
-        "Questions people actually ask", "",
-        deflist([
-            ("Do I need research experience?",
-             "No. It is not required."),
-            ("Do I need to be a neuroscience major?",
-             "No, at any tier. Projects need statistics, linguistics, and "
-             "software as much as biology."),
-            ("Can I apply as a junior or senior?",
-             "Yes, to every tier including Research Fellow. There is no class "
-             "year restriction."),
-            ("Is there a fee?",
-             "No. There are no dues at any tier and all programming is free."),
-            ("How do I apply?",
-             "Through a Google Form, linked in the recruiting status box "
-             f'above. <a href="{APPLY_URL}">Apply here</a>.'),
-            ("What is the difference between committee and research?",
-             "Committee membership is the leadership track: it leads to a Vice "
-             "President position and potentially to President. Research "
-             "membership is the research track. Committee membership helps a "
-             "research application somewhat, but it is not the main route into "
-             "research, and it is not a prerequisite."),
-            ("Do I have to be a committee member first?",
-             "No. You can apply directly for a Research Fellow position."),
-            ("How many people are admitted?",
-             "The chapter sets the research group at ten to twenty-five "
-             "Fellows across two to three projects. The chapter does not "
-             "publish an acceptance rate because it does not have one yet."),
-            ("Do you run experiments on people?",
-             "Some projects do. Current tracks include noninvasive stimulation "
-             "and studies with human volunteers. All human and animal work is "
-             "conducted under a faculty principal investigator with UT Austin "
-             "IRB approval, which is required before any data collection "
-             "begins. See the "
-             '<a href="research.html">research page</a> for what each track '
-             "involves."),
-            ("Can I propose my own question?",
-             "Yes, at any tier."),
-        ]))
-    + note("Last updated 29 August 2026."),
-)
-
 # ---- education --------------------------------------------------------------
 PAGES["education"] = dict(
     title=f"Education | {SITE}",
@@ -701,9 +729,14 @@ PAGES["contact"] = dict(
       <label for="cf-message">Message</label>
       <textarea id="cf-message" name="message" rows="6" required></textarea>
 
-      <button class="btn" type="submit">Send</button>
-      <p class="form-note">We use your name, email, subject, and message only to
-        reply to you. See our <a href="privacy.html">privacy notice</a>.</p>
+      <p class="hp" aria-hidden="true"><label for="cf-company">Company</label>
+        <input id="cf-company" name="company" type="text" tabindex="-1"
+               autocomplete="off" /></p>
+
+      <button class="btn" id="cf-send" type="submit">Send</button>
+      <p class="form-note">This goes straight to the chapter mailbox. We use
+        your name, email, subject, and message only to reply to you. See our
+        <a href="privacy.html">privacy notice</a>.</p>
       <p class="form-confirm" id="cf-confirm" hidden></p>
     </form>"""),
 )
@@ -713,32 +746,40 @@ PAGES["privacy"] = dict(
     title=f"Privacy | {SITE}",
     desc="What this site collects, which is almost nothing.",
     body=hero("Privacy", "What this site collects",
-              "This is a static site. It sets no cookies, runs no analytics, and "
-              "loads nothing from a third party.")
+              "This is a static site. It sets no cookies, runs no analytics, "
+              "and loads nothing from a third party while you read it.")
     + section(
         "", "",
-        deflist([
+        plainlist([
             ("Cookies", "None. The site sets no cookies and has no consent banner "
                         "because it has nothing to consent to."),
             ("Analytics", "None. No page views, sessions, or identifiers are "
                           "recorded."),
             ("Third-party requests",
-             "None. Fonts, scripts, and images are served from this site. Links "
-             "to other sites are ordinary links and are only followed if you "
-             "click them."),
+             "None while you read. Fonts, scripts, and images are served from "
+             "this site, and links to other sites are ordinary links that are "
+             "only followed if you click them. The one exception is the "
+             "contact form: pressing Send posts your message to FormSubmit, "
+             "which relays it to the chapter mailbox. Nothing is sent there "
+             "unless you press Send."),
             ("Server logs",
              "The host may keep standard access logs, which typically include IP "
              "address and user agent. The chapter does not read or analyze them."),
             ("Application data",
-             "Applications are collected through a form linked from the "
-             '<a href="join.html">join</a> page. Responses are read by the '
-             "reviewing officers only and are not shared outside the chapter."),
+             "Applications are collected through the Google Form the Apply "
+             "button opens. Responses are read by the reviewing officers only "
+             "and are not shared outside the chapter."),
+            ("Contact form",
+             "The name, email, subject, and message you send through the "
+             "contact page reach the chapter mailbox by way of FormSubmit, "
+             "which passes the message on and does not keep an account for "
+             "us. They are used only to reply to you."),
             ("Imaging data",
              "The tractography on the home page was reconstructed from a chapter "
              "member's own diffusion MRI, shared with their consent. No other "
              "person's imaging data appears on this site."),
         ]))
-    + note("Last updated 22 August 2026."),
+    + footnote("Last updated 22 August 2026."),
 )
 
 # ---- 404 --------------------------------------------------------------------
@@ -790,9 +831,15 @@ def nav_html(current: str) -> str:
 
 
 def footer_html() -> str:
+    def link(href: str, text: str) -> str:
+        # Apply is the one entry that leaves the site, and it leaves for the
+        # same form the header button opens.
+        away = ' target="_blank" rel="noreferrer"' if href.startswith("http") else ""
+        return f'<li><a href="{href}"{away}>{esc(text)}</a></li>'
+
     cols = "".join(
         f"<div><h4>{esc(title)}</h4><ul>"
-        + "".join(f'<li><a href="{h}">{esc(t)}</a></li>' for h, t in links)
+        + "".join(link(h, t) for h, t in links)
         + "</ul></div>"
         for title, links in FOOTER_COLS)
     ext = "".join(

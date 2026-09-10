@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<!--
+  Aleph Neuro's microbubble track viewer, from ultratrace_ulm/web/track_viewer
+  in github.com/alephneuro/microbubbles, MIT licensed (see LICENSE beside this
+  file). The shaders, the binary loader and the TrackSystem below are theirs
+  unchanged.
+
+  What is different here is the chrome, so it reads as a figure on a page
+  rather than as a full screen tool: the lil-gui control panel is gone, colour
+  runs off flow speed rather than intensity to match the ramp on their
+  published figure, the camera frames the volume for a short wide box instead
+  of a browser window, and the scale bar, the speed ramp and the zoom buttons
+  are drawn over it.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ultrasound localization microscopy of a living human brain</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        overflow: hidden;
+        background: #0a0c19;
+        color: #f2f7ff;
+        font: 13px/1.4 "Inter", ui-sans-serif, system-ui, -apple-system,
+              "Segoe UI", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      canvas { display: block; cursor: grab; }
+      canvas:active { cursor: grabbing; }
+
+      /* Shown only if WebGL is missing or the tracks fail to load, so the
+         section still carries an image either way. */
+      #fallback {
+        position: absolute; inset: 0; display: none;
+        width: 100%; height: 100%; object-fit: contain;
+      }
+      #status {
+        position: absolute; left: 50%; top: 50%;
+        transform: translate(-50%, -50%);
+        color: #a9bde0; letter-spacing: .01em;
+      }
+
+      .zoom {
+        position: absolute; left: 1.4rem; bottom: 1.4rem;
+        display: flex; flex-direction: column;
+        border-radius: 9px; overflow: hidden;
+        border: 1px solid rgba(150, 200, 255, .16);
+        background: rgba(6, 12, 30, .62);
+        backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+      }
+      .zoom button {
+        width: 2rem; height: 2rem; border: 0; background: none; cursor: pointer;
+        display: grid; place-items: center;
+        color: #a9bde0; font-size: 1rem; line-height: 1;
+        font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+      }
+      .zoom button + button { border-top: 1px solid rgba(150, 200, 255, .14); }
+      .zoom button:hover { background: rgba(150, 200, 255, .10); color: #f2f7ff; }
+
+      .scale {
+        position: absolute; right: 1.6rem; bottom: 1.4rem;
+        display: grid; justify-items: center; gap: .35rem;
+        pointer-events: none;
+      }
+      .scale-bar {
+        height: 3px; width: 110px; background: #f2f7ff; border-radius: 2px;
+      }
+      .scale-label { color: #a9bde0; font-size: .78rem; }
+
+      .ramp {
+        position: absolute; right: 1.6rem; top: 1.4rem;
+        display: grid; grid-template-columns: auto auto auto;
+        align-items: stretch; gap: .45rem; pointer-events: none;
+      }
+      .ramp-ticks {
+        display: flex; flex-direction: column; justify-content: space-between;
+        color: #a9bde0; font-size: .74rem; text-align: right;
+      }
+      .ramp-ticks b:first-child { color: #f2f7ff; font-weight: 500; }
+      /* The stops are cmapJet from the fragment shader below, bottom to top,
+         so a colour on the bar means the same speed as a colour in the volume. */
+      .ramp-bar {
+        width: 10px; height: clamp(120px, 22vh, 190px); border-radius: 3px;
+        border: 1px solid rgba(150, 200, 255, .22);
+        background: linear-gradient(to top,
+          #1a33cc 0%, #00b3e6 25%, #1ae633 50%, #f2d91a 75%, #e61a1a 100%);
+      }
+      .ramp-title {
+        writing-mode: vertical-rl;
+        color: #a9bde0; font-size: .72rem; letter-spacing: .02em;
+      }
+
+      .chrome { display: none; }
+      body.is-live .chrome { display: grid; }
+      body.is-live .zoom { display: flex; }
+
+      @media (max-width: 620px) {
+        .ramp-title { display: none; }
+        .scale, .ramp { right: .9rem; }
+        .zoom { left: .9rem; }
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <img id="fallback" src="../../assets/research/ulm-first-light.webp" alt="" />
+    <p id="status">Loading the reconstruction...</p>
+
+    <div class="zoom">
+      <button type="button" id="zoom-fit" aria-label="Reset the view">
+        <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+          <path d="M1 5V1h4M15 5V1h-4M1 11v4h4M15 11v4h-4" fill="none"
+                stroke="currentColor" stroke-width="1.6"></path>
+        </svg>
+      </button>
+      <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
+      <button type="button" id="zoom-out" aria-label="Zoom out">&minus;</button>
+    </div>
+    <div class="ramp chrome" aria-hidden="true">
+      <span class="ramp-ticks"><b>38</b><b>19</b><b>0</b></span>
+      <span class="ramp-bar"></span>
+      <span class="ramp-title">flow speed &middot; mm/s</span>
+    </div>
+    <div class="scale chrome" aria-hidden="true">
+      <span class="scale-bar" id="scale-bar"></span>
+      <span class="scale-label" id="scale-label">10 mm</span>
+    </div>
+
+    <script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+// ============================================================
+// Shaders
+// ============================================================
+
+// ============================================================
+// Shaders
+// ============================================================
+
+const vertexShader = `
+precision highp float;
+
+attribute float aSpeed;
+attribute float aCool;
+
+uniform float u_pointSize;
+uniform float u_pixelRatio;
+uniform float u_maxPoint;
+uniform float u_coolBoost;
+
+varying float vSpeed;
+
+void main() {
+  vSpeed = aSpeed;
+  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+  float size = u_pointSize * u_pixelRatio * (300.0 / max(-mvPosition.z, 1.0));
+  // The finest vessels are the ones that vanish first, so the slow third of
+  // the tracks draws slightly larger than the rest.
+  size *= mix(1.0, u_coolBoost, aCool);
+  gl_PointSize = min(size, u_maxPoint);
+  gl_Position = projectionMatrix * mvPosition;
+}
+`;
+
+const fragmentShader = `
+precision highp float;
+
+varying float vSpeed;
+uniform float u_maxSpeed;
+
+// Their ramp, and the one the bar beside the figure is drawn from.
+vec3 cmapJet(float t) {
+  t = clamp(t, 0.0, 1.0);
+  if (t < 0.25) return mix(vec3(0.1, 0.2, 0.8), vec3(0.0, 0.7, 0.9), t / 0.25);
+  if (t < 0.5)  return mix(vec3(0.0, 0.7, 0.9), vec3(0.1, 0.9, 0.2), (t - 0.25) / 0.25);
+  if (t < 0.75) return mix(vec3(0.1, 0.9, 0.2), vec3(0.95, 0.85, 0.1), (t - 0.5) / 0.25);
+  return mix(vec3(0.95, 0.85, 0.1), vec3(0.9, 0.1, 0.1), (t - 0.75) / 0.25);
+}
+
+void main() {
+  vec2 cxy = 2.0 * gl_PointCoord - 1.0;
+  float r2 = dot(cxy, cxy);
+  if (r2 > 1.0) discard;
+
+  // A flat disc with a soft rim, not a centre bright blob: a bubble is a thing
+  // at a place, and a radial falloff makes a crowd of them read as haze.
+  gl_FragColor = vec4(cmapJet(vSpeed / max(u_maxSpeed, 0.001)),
+                      1.0 - smoothstep(0.82, 1.0, r2));
+}
+`;
+
+// ============================================================
+// TrackSystem
+// ============================================================
+
+// Bubbles per vessel. Enough that the crowd traces the whole vessel at any
+// instant, so the map is always complete while every dot in it is moving.
+const PARTICLES_PER_TRACK = 40;
+// A ceiling on the total, so a denser reconstruction thins the crowd rather
+// than dropping frames.
+const PARTICLE_BUDGET = 350000;
+// Acquisition frames per second of playback.
+const PLAYBACK = 5.0;
+// Fraction of tracks, slowest first, that draw a little larger.
+const COOL_FRACTION = 0.33;
+const COOL_BOOST = 1.3;
+
+class TrackSystem {
+  constructor(trackData) {
+    this.trackData = trackData;
+    const { nTracks, tracks, pointData, floatsPerPoint: fpp } = trackData;
+
+    this.perTrack = Math.max(8, Math.min(
+      PARTICLES_PER_TRACK, Math.floor(PARTICLE_BUDGET / Math.max(nTracks, 1))));
+    const count = nTracks * this.perTrack;
+
+    // Each track is replayed on its own clock, from its first frame to its
+    // last, so a bubble crosses its vessel in the time the bubble that drew it
+    // actually took.
+    this.frameStart = new Float32Array(nTracks);
+    this.frameSpan = new Float32Array(nTracks);
+    const peak = new Float32Array(nTracks);
+    for (let i = 0; i < nTracks; i++) {
+      const off = tracks[i].pointOffset * fpp;
+      const len = tracks[i].length;
+      const first = pointData[off + 3];
+      this.frameStart[i] = first;
+      this.frameSpan[i] = Math.max(pointData[off + (len - 1) * fpp + 3] - first, 1);
+      let hottest = 0;
+      for (let j = 0; j < len; j++) {
+        hottest = Math.max(hottest, pointData[off + j * fpp + 4]);
+      }
+      peak[i] = hottest;
+    }
+
+    // Scattered starts. Evenly spaced ones make every vessel pulse in step and
+    // the whole figure beat like a metronome.
+    let seed = 0x2f6e2b1;
+    const random = () => {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+    this.progress = new Float32Array(count);
+    for (let i = 0; i < count; i++) this.progress[i] = random();
+
+    const sorted = Float32Array.from(peak).sort();
+    const coolBelow = sorted[Math.floor(COOL_FRACTION * (nTracks - 1))];
+    const cool = new Float32Array(count);
+    for (let i = 0; i < nTracks; i++) {
+      const flag = peak[i] < coolBelow ? 1 : 0;
+      for (let j = 0; j < this.perTrack; j++) cool[i * this.perTrack + j] = flag;
+    }
+
+    this.positions = new Float32Array(count * 3);
+    this.speeds = new Float32Array(count);
+    this.positionAttr = new THREE.BufferAttribute(this.positions, 3);
+    this.speedAttr = new THREE.BufferAttribute(this.speeds, 1);
+    this.positionAttr.setUsage(THREE.DynamicDrawUsage);
+    this.speedAttr.setUsage(THREE.DynamicDrawUsage);
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", this.positionAttr);
+    geometry.setAttribute("aSpeed", this.speedAttr);
+    geometry.setAttribute("aCool", new THREE.BufferAttribute(cool, 1));
+
+    this.uniforms = {
+      u_pointSize: { value: 0.3 },
+      u_pixelRatio: { value: 1.0 },
+      u_maxPoint: { value: 3.0 },
+      u_coolBoost: { value: COOL_BOOST },
+      u_maxSpeed: { value: trackData.maxSpeed },
+    };
+
+    this.points = new THREE.Points(geometry, new THREE.ShaderMaterial({
+      uniforms: this.uniforms,
+      vertexShader,
+      fragmentShader,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.NormalBlending,
+    }));
+
+    this.update(0);
+  }
+
+  getObject3D() {
+    return this.points;
+  }
+
+  /* Advance every bubble along its own recording, then move it to where the
+     track says it was at that moment. Positions are interpolated between the
+     two samples that bracket the moment rather than snapped to the nearer one,
+     so a bubble slides down its vessel instead of stepping between beads.
+
+     Advancing and placing are one pass on purpose. Split in two they walk
+     91,760 particles twice a frame, and the second walk has to divide to get
+     back to the track each particle belongs to. */
+  update(dt) {
+    const { nTracks, tracks, pointData, floatsPerPoint: fpp } = this.trackData;
+    const per = this.perTrack;
+    const progress = this.progress;
+    const positions = this.positions;
+    const speeds = this.speeds;
+
+    for (let i = 0; i < nTracks; i++) {
+      const off = tracks[i].pointOffset * fpp;
+      const last = tracks[i].length - 1;
+      const span = this.frameSpan[i];
+      const start = this.frameStart[i];
+      const step = dt === 0 ? 0 : (dt * PLAYBACK) / span;
+      const base = i * per;
+
+      for (let j = 0; j < per; j++) {
+        const k = base + j;
+        const p = progress[k] + step;
+        progress[k] = p - Math.floor(p);
+        const at = start + progress[k] * span;
+
+        // Frames within a track are close to evenly spaced, so guessing the
+        // index straight from the fraction and walking off the error costs
+        // one or two reads. A binary search costs six scattered ones into a
+        // three megabyte buffer, ninety thousand times a frame.
+        let lo = (progress[k] * last) | 0;
+        if (lo >= last) lo = last - 1;
+        if (lo < 0) lo = 0;
+        while (lo > 0 && pointData[off + lo * fpp + 3] > at) lo--;
+        while (lo < last - 1 && pointData[off + (lo + 1) * fpp + 3] <= at) lo++;
+        const a = off + lo * fpp;
+        const b = a + fpp;
+        const gap = pointData[b + 3] - pointData[a + 3];
+        const f = gap > 0 ? (at - pointData[a + 3]) / gap : 0;
+
+        const o = k * 3;
+        positions[o] = pointData[a] + f * (pointData[b] - pointData[a]);
+        positions[o + 1] =
+          pointData[a + 1] + f * (pointData[b + 1] - pointData[a + 1]);
+        positions[o + 2] =
+          pointData[a + 2] + f * (pointData[b + 2] - pointData[a + 2]);
+        speeds[k] = pointData[a + 4] + f * (pointData[b + 4] - pointData[a + 4]);
+      }
+    }
+    this.positionAttr.needsUpdate = true;
+    this.speedAttr.needsUpdate = true;
+  }
+
+  setRenderParams({ pointSize, maxPoint, pixelRatio }) {
+    if (pointSize !== undefined) this.uniforms.u_pointSize.value = pointSize;
+    if (maxPoint !== undefined) this.uniforms.u_maxPoint.value = maxPoint;
+    if (pixelRatio !== undefined) this.uniforms.u_pixelRatio.value = pixelRatio;
+  }
+}
+
+// ============================================================
+// TrackLoader
+// ============================================================
+
+const MAGIC = 0x554c4d54;
+
+async function loadTracks(url) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to load ${url}: ${response.status}`);
+  const buffer = await response.arrayBuffer();
+
+  const headerView = new DataView(buffer, 0, 64);
+  const magic = headerView.getUint32(0, true);
+  if (magic !== MAGIC) throw new Error(`Bad magic: 0x${magic.toString(16)}`);
+
+  const version = headerView.getUint32(4, true);
+  if (version !== 2 && version !== 3) throw new Error(`Unsupported version: ${version}`);
+
+  const floatsPerPoint = version >= 3 ? 6 : 5;
+  const nTracks = headerView.getUint32(8, true);
+  const totalPoints = headerView.getUint32(12, true);
+  const maxSpeed = headerView.getFloat32(16, true);
+
+  const boundsMin = [
+    headerView.getFloat32(20, true),
+    headerView.getFloat32(24, true),
+    headerView.getFloat32(28, true),
+  ];
+  const boundsMax = [
+    headerView.getFloat32(32, true),
+    headerView.getFloat32(36, true),
+    headerView.getFloat32(40, true),
+  ];
+
+  const tableOffset = 64;
+  const tableView = new DataView(buffer, tableOffset, nTracks * 8);
+  const tracks = new Array(nTracks);
+  for (let i = 0; i < nTracks; i++) {
+    tracks[i] = {
+      pointOffset: tableView.getUint32(i * 8, true),
+      length: tableView.getUint32(i * 8 + 4, true),
+    };
+  }
+
+  const pointDataOffset = tableOffset + nTracks * 8;
+  const pointData = new Float32Array(buffer, pointDataOffset, totalPoints * floatsPerPoint);
+
+  return { nTracks, totalPoints, maxSpeed, boundsMin, boundsMax, tracks, pointData, floatsPerPoint };
+}
+
+// ============================================================
+// App
+// ============================================================
+
+const params = {
+  pointSize: 0.30,      // replaced at init, once the framing distance is known
+  paused: false,
+};
+
+// The ground the volume sits on, a shade under the page's own navy so the
+// figure reads as a window cut into it.
+const GROUND = 0x0a0c19;
+
+const status = document.getElementById("status");
+const fallback = document.getElementById("fallback");
+const scaleBar = document.getElementById("scale-bar");
+const scaleLabel = document.getElementById("scale-label");
+
+function giveUp(message) {
+  status.hidden = true;
+  fallback.style.display = "block";
+  console.error(message);
+}
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+} catch (err) {
+  giveUp(err);
+}
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 2000);
+camera.up.set(0, 0, 1);
+
+let orbitControls = null;
+let trackSystem = null;
+let trackData = null;
+let volume = null;      // { center, size } once the tracks are in
+let userMoved = false;
+
+if (renderer) {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(GROUND);
+  document.body.appendChild(renderer.domElement);
+
+  orbitControls = new OrbitControls(camera, renderer.domElement);
+  orbitControls.enableDamping = true;
+  orbitControls.dampingFactor = 0.05;
+  orbitControls.enablePan = false;
+  // No turntable. The figure already moves, and a drift under the flow makes
+  // it hard to tell which motion is the blood.
+  orbitControls.addEventListener("start", () => {
+    userMoved = true;
+  });
+
+}
+
+/* What to frame on. Not the header's imaged box, and not the raw extents of
+   the points either: a handful of localisations sit well outside the tissue,
+   and framing to include them leaves the anatomy small in a mostly empty
+   frame. Drop the sparsest half percent by distance from the middle, which
+   takes strays in any direction without cropping a whole flank the way a per
+   axis percentile does. */
+function dataExtents(data, keep = 0.995) {
+  const fpp = data.floatsPerPoint;
+  const n = data.totalPoints;
+  const axes = [0, 1, 2].map((axis) => {
+    const v = new Float32Array(n);
+    for (let i = 0; i < n; i++) v[i] = data.pointData[i * fpp + axis];
+    return v;
+  });
+  const middle = axes.map((v) => {
+    const sorted = v.slice().sort();
+    return sorted[n >> 1];
+  });
+
+  const radius = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const dx = axes[0][i] - middle[0];
+    const dy = axes[1][i] - middle[1];
+    const dz = axes[2][i] - middle[2];
+    radius[i] = dx * dx + dy * dy + dz * dz;
+  }
+  const cut = radius.slice().sort()[Math.floor(n * keep)];
+
+  const lo = [Infinity, Infinity, Infinity];
+  const hi = [-Infinity, -Infinity, -Infinity];
+  for (let i = 0; i < n; i++) {
+    if (radius[i] > cut) continue;
+    for (let a = 0; a < 3; a++) {
+      if (axes[a][i] < lo[a]) lo[a] = axes[a][i];
+      if (axes[a][i] > hi[a]) hi[a] = axes[a][i];
+    }
+  }
+  return [new THREE.Vector3(...lo), new THREE.Vector3(...hi)];
+}
+
+/* Distance that fits the whole volume in the frame. Doing it from both the
+   vertical and the horizontal half angle matters here because the box is wide
+   and short, so on a wide viewport height binds and on a narrow one width
+   does. */
+// One press of the zoom out button, applied before the reader gets there, so
+// the volume opens with room around it instead of against the frame.
+const START_ZOOM_OUT = 1.25;
+
+function fitDistance() {
+  const half = (camera.fov * Math.PI) / 360;
+  const byHeight = volume.size.z / 2 / Math.tan(half);
+  const byWidth = volume.size.x / 2 / Math.tan(half) / camera.aspect;
+  return Math.max(byHeight, byWidth) * 1.10 * START_ZOOM_OUT;
+}
+
+function frameCamera() {
+  const d = fitDistance();
+  camera.position.set(volume.center.x, volume.center.y + d, volume.center.z);
+  orbitControls.target.copy(volume.center);
+  orbitControls.minDistance = d * 0.18;
+  orbitControls.maxDistance = d * 2.2;
+  orbitControls.update();
+}
+
+function zoomBy(factor) {
+  if (!orbitControls) return;
+  userMoved = true;
+  const offset = camera.position.clone().sub(orbitControls.target);
+  const length = THREE.MathUtils.clamp(
+    offset.length() * factor,
+    orbitControls.minDistance,
+    orbitControls.maxDistance
+  );
+  camera.position.copy(orbitControls.target).add(offset.setLength(length));
+  orbitControls.update();
+}
+
+document.getElementById("zoom-in").addEventListener(
+  "click", () => zoomBy(1 / 1.25));
+document.getElementById("zoom-out").addEventListener(
+  "click", () => zoomBy(1.25));
+document.getElementById("zoom-fit").addEventListener("click", () => {
+  if (!volume) return;
+  frameCamera();
+  userMoved = false;
+});
+
+/* The bar has to mean a real distance, so it is measured off the projection at
+   the depth of the volume's centre and relabelled when zooming would push it
+   out of a readable width. */
+const SCALE_STEPS = [1, 2, 5, 10, 20, 50, 100];
+let lastScaleWidth = -1;
+
+function updateScaleBar() {
+  const dist = camera.position.distanceTo(orbitControls.target);
+  const worldHeight = 2 * dist * Math.tan((camera.fov * Math.PI) / 360);
+  const pxPerMm = window.innerHeight / worldHeight;
+  const mm = SCALE_STEPS.filter((s) => s * pxPerMm <= 150).pop() ||
+    SCALE_STEPS[0];
+  const width = Math.round(mm * pxPerMm);
+  if (width === lastScaleWidth) return;
+  lastScaleWidth = width;
+  scaleBar.style.width = width + "px";
+  scaleLabel.textContent = mm + " mm";
+}
+
+function applyParams() {
+  if (!trackSystem) return;
+  const ratio = renderer.getPixelRatio();
+  trackSystem.setRenderParams({
+    pointSize: params.pointSize,
+    pixelRatio: ratio,
+    // A bubble may grow a little as the reader zooms in, but not without
+    // bound: at 1 / distance it becomes a disc that swallows its own vessel.
+    maxPoint: 2.4 * ratio,
+  });
+}
+
+async function init() {
+  if (!renderer) return;
+  try {
+    trackData = await loadTracks("data/tracks.bin");
+
+    trackSystem = new TrackSystem(trackData);
+    scene.add(trackSystem.getObject3D());
+
+    const [dmin, dmax] = dataExtents(trackData);
+    const size = dmax.clone().sub(dmin);
+    volume = {
+      size,
+      center: dmin.clone().add(size.clone().multiplyScalar(0.5)),
+    };
+
+    resize();
+    frameCamera();
+    // A bubble should read as a bubble at the default framing: a little over a
+    // pixel and a half across, whatever the display density. The shader already
+    // multiplies by the pixel ratio and by 300 / distance.
+    params.pointSize = 1.7 * fitDistance() / 300;
+    applyParams();
+
+    status.hidden = true;
+    document.body.classList.add("is-live");
+  } catch (err) {
+    giveUp(err);
+  }
+}
+
+function resize() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  if (!renderer) return;
+  const dt = Math.min(clock.getDelta(), 0.05);
+  orbitControls.update();
+  if (trackSystem && !params.paused) trackSystem.update(dt);
+  if (volume) updateScaleBar();
+  renderer.render(scene, camera);
+}
+
+window.addEventListener("resize", () => {
+  if (!renderer) return;
+  resize();
+  // Refit only while the view is still ours; once the reader has turned or
+  // zoomed it, a resize must not throw their framing away.
+  if (volume && !userMoved) frameCamera();
+});
+
+init();
+animate();
+    </script>
+  </body>
+</html>

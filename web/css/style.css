@@ -38,7 +38,12 @@ html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
-  min-height: 100%;
+  /* A short page used to end its footer halfway down and leave the cortex
+     field showing underneath it, which reads as a page that failed to load
+     the rest of itself. */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   background: var(--navy-900);
   color: var(--ink);
   font-family: var(--font-sans);
@@ -165,13 +170,31 @@ body::after {
   color: var(--navy-900); background: linear-gradient(180deg, #a9ecff, var(--cyan));
   border: 1px solid rgba(255,255,255,.35);
   box-shadow: 0 8px 24px -10px rgba(127,227,255,.8);
+  transition: transform .16s ease, box-shadow .22s ease, background .22s ease,
+              border-color .22s ease;
 }
+.btn:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(180deg, #c4f2ff, #8fe8ff);
+  box-shadow: 0 12px 30px -10px rgba(127, 227, 255, .95);
+}
+/* The press has to move further than the hover, or a click on a trackpad
+   registers as nothing at all. */
+.btn:active { transform: translateY(1px); box-shadow: 0 4px 14px -8px rgba(127, 227, 255, .8); }
+.btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+
 .btn-ghost {
   color: var(--ink); background: rgba(255,255,255,.06);
   border: 1px solid var(--glass-line); box-shadow: none;
   backdrop-filter: blur(var(--blur-sm));
   -webkit-backdrop-filter: blur(var(--blur-sm));
 }
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, .12);
+  border-color: rgba(150, 200, 255, .42);
+  box-shadow: 0 10px 26px -14px rgba(0, 0, 0, .9);
+}
+.btn-ghost:active { background: rgba(255, 255, 255, .08); }
 
 /* ---------- hero ---------- */
 
@@ -346,6 +369,106 @@ h2 {
   color: var(--ink-dim); font-size: .88rem;
 }
 .note a { color: var(--cyan); }
+
+/* A date at the foot of a page is not an aside worth a panel. */
+.footnote {
+  margin-top: 2.6rem;
+  color: var(--ink-dim); font-size: .85rem;
+}
+
+/* Term and explanation as running text. The glass version of this reads as a
+   spec sheet, which is wrong for a page that is mostly reassurance. */
+.plainlist { margin: 0; }
+.plainlist dt {
+  margin-top: 1.9rem; color: var(--ink); font-weight: 600; font-size: 1.02rem;
+}
+.plainlist dt:first-of-type { margin-top: 0; }
+.plainlist dd { margin: .4rem 0 0; color: var(--ink-dim); }
+.plainlist dd a { color: var(--cyan); }
+
+/* ---- figures ------------------------------------------------------------- */
+/* Two kinds of image on this site, and they want opposite treatment. The tract
+   plates are transparent PNG/WebP drawn in the page's own ink, so a frame round
+   them would draw a box round nothing. Photographs and screenshots are opaque
+   rectangles that need the frame to sit on the cortex field without floating. */
+.fig { margin: 0; }
+.fig img { display: block; width: 100%; height: auto; }
+.fig figcaption {
+  margin-top: .75rem;
+  color: var(--ink-dim); font-size: .82rem; line-height: 1.55;
+}
+.fig figcaption a { color: var(--cyan); }
+.fig--framed img {
+  border-radius: 14px;
+  border: 1px solid var(--glass-line);
+  box-shadow: 0 20px 60px -24px rgba(0, 0, 0, .8);
+}
+/* The plates are pale hairlines on transparency, and the cortex field behind
+   the page is itself pale wisps on navy. Dropped straight onto it a plate
+   reads as more background. The panel gives it a darker ground of its own,
+   which is also what makes it look like a plate rather than a stray render. */
+.fig--plate img {
+  border-radius: 14px;
+  background: rgba(6, 14, 36, .62);
+  border: 1px solid rgba(150, 200, 255, .10);
+}
+
+/* Every figure on a page gets the same width, centred under the copy that
+   explains it. Sizing each one to its own content is what made the research
+   page look assembled out of spare parts. */
+.fig--wide {
+  margin: 2.6rem auto 0;
+  width: 100%;
+  max-width: 60rem;
+}
+.fig--wide figcaption { max-width: 46rem; }
+
+/* A screenshot of a site the reader can open is a thing they will try to
+   click, so it lifts under the pointer to say that it is one. */
+.fig--link a { display: block; border-radius: 14px; }
+.fig--link img {
+  transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+}
+.fig--link a:hover img {
+  transform: translateY(-4px) scale(1.008);
+  border-color: rgba(150, 200, 255, .45);
+  box-shadow: 0 34px 70px -30px rgba(0, 0, 0, .9),
+              0 0 0 1px rgba(127, 227, 255, .28);
+}
+.fig--link a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; }
+
+/* The research page runs copy the full width of the shell with the figure
+   centred beneath it, so a track reads as one column instead of a paragraph
+   squeezed beside a thumbnail. Figures keep the 60rem measure above, which is
+   also the width the plate was rendered at, and the caption keeps a normal
+   prose measure under it. */
+.page-about .hero-copy,
+.page-privacy .hero-copy { max-width: 52rem; }
+
+.page-research section p,
+.page-research .ladder,
+.page-about section p,
+.page-privacy section p,
+.page-privacy .plainlist,
+.page-privacy .plainlist dd { max-width: none; }
+.page-research .fig--wide figcaption { max-width: 52rem; margin-inline: auto; }
+
+main { flex: 1 0 auto; }
+.site-footer { flex-shrink: 0; }
+
+/* ---- viewers you can turn ------------------------------------------------
+   Everything inside the frame, including its scale bar and colour ramp, is the
+   embedded viewer's own. This only shapes the pane it sits in. */
+.viewer {
+  position: relative;
+  height: var(--viewer-h, min(70vh, 620px));
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--glass-line);
+  background: var(--navy-900);
+  box-shadow: 0 24px 70px -28px rgba(0, 0, 0, .85);
+}
+.viewer iframe { width: 100%; height: 100%; border: 0; display: block; }
 
 @media (max-width: 900px) {
   .hero { grid-template-columns: 1fr; padding-top: 2rem; }
@@ -768,6 +891,15 @@ body:not(.page-index) h2 { margin-bottom: .9rem; }
   background: rgba(127,227,255,.10); border: 1px solid var(--glass-line);
   font-size: .87rem; color: var(--ink);
 }
+.form-confirm.is-error {
+  background: rgba(255, 176, 92, .10);
+  border-color: rgba(255, 176, 92, .34);
+}
+.contact-form .btn[disabled] { opacity: .6; cursor: default; }
+
+/* Honeypot. Hidden from everyone, including screen readers, so anything that
+   arrives in it came from something that reads the markup and not the page. */
+.hp { display: none; }
 
 /* Visually hidden but available to screen readers. Used to give a page its
    name in the accessibility tree when the design shows only a statement. */
