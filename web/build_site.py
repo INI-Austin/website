@@ -454,13 +454,33 @@ PAGES["research"] = dict(
     + section(
         "Track D: Hyperflow, driving and measuring glymphatic clearance", "",
         "<p>The glymphatic system is the brain's sleep dependent waste "
-        "clearance pathway, carrying amyloid beta and tau out of neural "
-        "tissue. Low intensity focused ultrasound enhances that clearance in "
-        "animal models with no tissue damage, and the MRI index most of the "
-        "field relies on to measure it has been shown to be confounded. This "
-        "track treats measurement and intervention as one loop: drive "
-        "clearance, measure whether it actually moved using physics grounded "
-        "imaging and a blood biomarker, and tune the next session.</p>")
+        "clearance pathway, carrying amyloid beta, tau, and alpha synuclein "
+        "out of neural tissue. Low intensity focused ultrasound enhances that "
+        "clearance in animal models through the TRPV4-AQP4 pathway with no "
+        "evidence of tissue damage, while the diffusion MRI index most of the "
+        "field reports has been shown to be confounded by fibre geometry "
+        "rather than reflecting perivascular flow. No completed human "
+        "clearance trial exists yet. This track treats measurement and "
+        "intervention as one loop: drive clearance, measure whether it "
+        "actually moved, and tune the next session on that readout.</p>"
+        + steps([
+            ("Measurement stack",
+             "Anchor on a contrast or physics based glymphatic MRI readout "
+             "paired with plasma p-tau217, and demote the diffusion index to "
+             "an exploratory secondary rather than an endpoint."),
+            ("Subject specific modelling",
+             "Turn an individual scan into a simulation of that person's CSF "
+             "and glymphatic flow, so a session reports how much fluid moved "
+             "instead of a proxy for it."),
+            ("Sleep gated drive",
+             "Deliver closed loop focused ultrasound in the slow wave window "
+             "where clearance naturally peaks, and find the parameters that "
+             "raise flow without heating tissue."),
+            ("First population",
+             "Run the pilot in idiopathic intracranial hypertension, where "
+             "the clearance failure is clearest in the smallest study, before "
+             "carrying a positive readout into early Alzheimer's disease."),
+        ]))
     + section(
         "Beyond the four tracks", "",
         "<p>Two pieces of work sit outside the platform. Neither is a "
