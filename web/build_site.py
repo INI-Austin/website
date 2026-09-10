@@ -612,101 +612,22 @@ PAGES["people"] = dict(
 
 # ---- join -------------------------------------------------------------------
 # ---- education --------------------------------------------------------------
+# Education and outreach are placeholders until the officers who own them
+# settle what actually runs. The prose that used to be here (a journal club
+# pattern, an eight-week methods outline, three planned programs) was written
+# for this site rather than agreed by the chapter, so it is in git history at
+# b8f7983 rather than on the page.
 PAGES["education"] = dict(
     title=f"Education | {SITE}",
-    desc="Journal club, the methods curriculum, and workshops. Open to any UT "
-         "student at no cost.",
-    body=hero("Education", "The curriculum, published",
-              "Journal club, an eight-week methods sequence, and workshops. All "
-              "of it is open to any UT student, whether or not they are a Fellow, "
-              "and none of it costs anything.")
-    + banner("draft", "Nothing on this page has run yet.",
-             "The journal club pattern and the methods outline below are "
-             "proposals written for this site. The Vice President of Education "
-             "sets the actual curriculum.")
-    + section(
-        "Journal club",
-        proposed("Every other week during the semester, one paper, one member "
-                 "presenting, thirty minutes of discussion.")
-        + " Papers chosen for having something wrong with them as often as for "
-          "being landmarks.",
-        table(["Week", "Focus", "Presenter"], [
-            ["1", "A landmark paper in the current project area", pending("TBA")],
-            ["3", "A direct challenge to that landmark", pending("TBA")],
-            ["5", "A methods paper underlying both", pending("TBA")],
-            ["7", "A failed replication, read closely", pending("TBA")],
-            ["9", "A preprint from the last six months", pending("TBA")],
-            ["11", "Member's choice", pending("TBA")],
-        ]))
-    + section(
-        "Methods sequence",
-        proposed("Eight sessions, run once per year, ninety minutes each.")
-        + " Published as an outline so it can be argued with rather than taken "
-          "on trust.",
-        steps([
-            ("Reading a paper against itself",
-             "Figures before abstract. What the data would look like if the claim "
-             "were false."),
-            ("Study design and what it can support",
-             "Cross-sectional, longitudinal, and within-subject designs, and the "
-             "claims each cannot license."),
-            ("Effect sizes, intervals, and power",
-             "Why an underpowered significant result is weaker evidence than a "
-             "null one, not stronger."),
-            ("Pre-registration and the garden of forking paths",
-             "Reading a registration against the paper that came out of it."),
-            ("Neuroimaging data, concretely",
-             "What a BIDS dataset contains, what a preprocessing pipeline does to "
-             "it, and where the choices are."),
-            ("Diffusion MRI and tractography",
-             "Reconstruction, its ambiguities, and why a tract image is a model "
-             "and not a photograph."),
-            ("Systematic search and extraction",
-             "Building a search, an inclusion log, and an extraction sheet that "
-             "someone else could rerun."),
-            ("Writing the thing",
-             "Structure, figures, authorship, and how to submit."),
-        ]))
-    + section(
-        "Workshops", "",
-        '<p class="empty">Workshop dates for the coming term are published on the '
-        '<a href="/events">events</a> page as they are set.</p>')
-    + note("The tractography on the home page was reconstructed from a chapter "
-           "member's own diffusion MRI, using the pipeline the sixth session "
-           "above would cover. A chapter member has already done this work, "
-           "which is why it can be taught here."),
+    desc="Chapter education programs.",
+    body=coming_soon("Education"),
 )
 
 # ---- outreach ---------------------------------------------------------------
 PAGES["outreach"] = dict(
     title=f"Outreach | {SITE}",
-    desc="K-12 visits, brain health programming, and the annual symposium, with "
-         "dates, locations, and numbers.",
-    body=hero("Outreach", "Programs with numbers attached",
-              "Every outreach program on this page will be reported with its "
-              "date, its location, and how many people it reached. A program "
-              "without those three is a statement of intent, not a result.")
-    + section(
-        "Planned programs", "",
-        cards([
-            dict(tag="K-12", title="School visits",
-                 body="Classroom sessions on how the brain is studied, built "
-                      "around the chapter's own imaging data rather than stock "
-                      "diagrams."),
-            dict(tag="Community", title="Brain health programming",
-                 body="Open sessions on sleep, ageing, and cognition, covering "
-                      "what the evidence supports and, as often, what it does "
-                      "not."),
-            dict(tag="Annual", title="Research symposium",
-                 body="The chapter's flagship event. Fellows present the term's "
-                      "deliverables alongside invited speakers."),
-        ]))
-    + section(
-        "Reported outcomes", "",
-        '<p class="empty">No programs have run yet. When one does, it is '
-        'listed here as program, date, site, and number of people reached.</p>')
-    + note("Outreach describes research. It does not offer screening, "
-           "assessment, or advice about anyone's health."),
+    desc="Chapter outreach programs.",
+    body=coming_soon("Outreach"),
 )
 
 # ---- events -----------------------------------------------------------------
