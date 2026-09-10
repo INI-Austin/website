@@ -11,7 +11,7 @@
   "use strict";
 
   var CALENDAR_ID = "ini.at.austin@gmail.com";
-  var API_KEY = "";
+  var API_KEY = "AIzaSyDudRiT7vk63oPWg-GvxOgEohBqJgbsIBQ";
 
   // How much of the calendar to pull. The month arrows move through whatever
   // is in this window without going back to the network.

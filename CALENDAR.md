@@ -21,42 +21,32 @@ With no key set the page still renders, it just renders empty. So does a
 failed request. A visitor never sees an error: an events page with no events is
 a legible page, an events page with a stack trace is not.
 
-## The two steps left
+## Status
 
-Both are in the chapter's Google account.
+Live. The calendar is public with full event details, and the browser key is in
+`web/js/calendar.js`, restricted to `https://iniaustin.org/*`. Add an event to
+the calendar and it is on the page at the next load.
 
-**1. Make the calendar public.** In Google Calendar, open Settings for
-`ini.at.austin@gmail.com`, go to *Access permissions for events*, and tick
-*Make available to public*. Leave it on **See only free/busy** if you do not
-want titles readable, but note the page then has nothing to show; to list event
-names, choose *See all event details*. Only put on this calendar what the
-chapter is happy to publish.
+The key is meant to be public. The referrer restriction is what protects it: it
+works from this domain and nowhere else, and it can only read Calendar. If it is
+ever abused, delete it in the console and make another; nothing else changes.
 
-**2. Create a browser API key.**
+## It only works from iniaustin.org
 
-1. Go to <https://console.cloud.google.com/> and create a project, or open an
-   existing one.
-2. *APIs & Services* -> *Library* -> search "Google Calendar API" -> **Enable**.
-3. *APIs & Services* -> *Credentials* -> *Create credentials* -> **API key**.
-4. Edit the key and restrict it, which matters because the key ships in the
-   page source:
-   - *Application restrictions*: **Websites**, with
-     `https://iniaustin.org/*` and `https://*.iniaustin.org/*`. Add
-     `http://localhost:8000/*` if you want the calendar to work in local
-     preview too.
-   - *API restrictions*: **Restrict key**, and select only *Google Calendar
-     API*.
-5. Paste the key into `web/js/calendar.js`:
+The referrer restriction has no exception for local preview, so `/events` on
+localhost draws the week strip and month grid and fills them with nothing. That
+is the same thing a visitor sees if Google is down, which is the intended
+failure. To see real events locally, either add `http://localhost:8000/*` to the
+key's website restrictions in the console, or preview against a saved response.
 
-       var API_KEY = "AIza...";
+## Set the calendar to Central time
 
-6. Rebuild with `python3 build_site.py` from `web/`, then commit and push.
-
-A key restricted this way is meant to be public. It cannot be used from another
-site, and it can only read this one API. If it is ever abused, delete it in the
-console and make a new one; nothing else has to change.
-
-The privacy page already says the events page reads the calendar from Google.
+The calendar was created in `America/New_York`. Google stores an event at the
+instant the calendar's zone makes it, so an officer in Austin who types 11am
+gets an event at 10am Central, and that is the hour the page shows. Fix it in
+Google Calendar under *Settings* for the calendar, *Time zone*, Central Time -
+Chicago. Changing the setting does not move events that already exist, so check
+anything already on the calendar afterwards.
 
 ## Checking it
 
