@@ -9,3 +9,6 @@ dependencies = [
     "scipy>=1.13",
     "pillow>=10.3",
 ]
+
+[tool.ty.environment]
+root = ["."]

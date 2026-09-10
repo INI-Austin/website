@@ -47,7 +47,7 @@ def largest_opaque_square(alpha: np.ndarray, frac: float) -> tuple[int, int, int
     side = (half * 2) // 2 * 2
     if frac > 0:
         side = min(side, int(min(alpha.shape) * frac) // 2 * 2)
-    y0, x0 = cy - side // 2, cx - side // 2
+    y0, x0 = int(cy) - side // 2, int(cx) - side // 2
     print(f"largest inscribed square: side {side} centred at ({cx},{cy})")
     return y0, x0, side
 

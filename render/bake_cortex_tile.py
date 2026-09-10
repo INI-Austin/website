@@ -167,7 +167,8 @@ def main():
     print(f"wrote {a.out}  {img.size}")
 
     # Quick sanity render so the tile can be eyeballed before shipping.
-    L = np.array([-0.45, 0.60, -0.66]); L /= np.linalg.norm(L)
+    L = np.array([-0.45, 0.60, -0.66])
+    L /= np.linalg.norm(L)
     d = np.clip(-(n @ L), 0, 1)
     prev = np.dstack([d * 0.55, d * 0.78, d]) ** (1 / 1.2)
     Image.fromarray((np.clip(np.tile(prev, (2, 2, 1)), 0, 1) * 255).astype(np.uint8)).save(a.preview)

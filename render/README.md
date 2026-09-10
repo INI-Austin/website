@@ -69,3 +69,56 @@ Tracts are in qsiprep ACPC space, surfaces in fMRIPrep anat space.
 LPS convention by trying all four readings and keeping whichever seats white
 matter inside the pial surface. The winner puts 86.5% of streamline points
 inside, against 75.5% untransformed. `to_anat.py` applies it.
+
+## The ULM viewer on the research page
+
+Nothing here is related to the tractography above. The research page's
+ultrasound section shows Aleph Neuro's own track viewer, vendored under
+`web/viewer/ulm` from `ultratrace_ulm/web/track_viewer` in their MIT licensed
+repository and fed the track data they published. `ulm_to_viewer.py` does the
+conversion the two ends of their pipeline need, and `ulm_figure.py` renders the
+still that stands in when WebGL is unavailable.
+
+- `ulm_decode.py` reads the ULMT v6 binary from `alephneuro.com/data/`. Tracks
+  are delta encoded: the first point of a track carries absolute quantised
+  coordinates and every point after it an int16 step, which is how a whole
+  reconstruction fits in about a megabyte. The two scalar planes are easy to
+  swap and I had them the wrong way round for a while: the plane at offset 7n,
+  scaled by the float at header offset 16, is flow speed, and the plane at 8n
+  is a normalised weight. The giveaway is the range, 0 to 0.404 against exactly
+  0 to 1. Their figure divides the first by `RAMP_DIVISOR` and labels the top
+  of the ramp 38 mm/s.
+- `ulm_to_viewer.py` rewrites that into the v3 layout their viewer reads:
+  a 64 byte header, an 8 byte per track offset and length table, then 24 byte
+  point records of x, y, z, frame, speed and intensity as float32. The result
+  is 3.0 MB, which is why the figure is lazily loaded.
+- The renderer in `web/viewer/ulm/index.html` is not the reveal animation their
+  repo viewer ships, which builds the map up over several seconds, holds,
+  blanks and replays. It is the one their own site runs, which is a different
+  program: the reveal is switched off there and what you see is a crowd of
+  bubbles being advected. Each track carries forty particles at scattered
+  starting phases; every frame each particle advances five acquisition frames
+  along its own recording, wraps at the end, and is placed by interpolating
+  between the two samples that bracket that moment. Nothing appears or
+  disappears, so the vascular map is always complete, and every dot in it is
+  moving down the vessel the bubble that drew it actually travelled.
+- `ulm_figure.py` renders the still the section falls back to without WebGL. It
+  splats the points with a sort-then-scatter depth test, the same trick
+  `render_surface.py` uses. Compositing picks the brightest
+  contributor per pixel rather than a per-channel maximum: taking the max of
+  each channel blends a red track crossing a cyan one into white, inventing a
+  flow speed that is in neither of them.
+
+Colour is the full spectrum their figure uses, with their exact stops, because
+that is the convention in velocity-encoded flow imaging and it keeps our render
+readable against theirs.
+
+Their published parameters, read out of the site bundle rather than guessed:
+forty particles per track capped by a 350,000 particle budget, five acquisition
+frames per second of playback, a colour divisor of 0.18, a ramp labelled 0 to
+38 mm/s, a flat point disc with a soft rim, ordinary alpha blending, and a size
+boost of 1.3 on the slowest third of tracks so the finest vessels stay visible.
+
+    python3 ulm_to_viewer.py work/ulm-tracks.bin.gz \
+        ../web/viewer/ulm/data/tracks.bin
+    python3 ulm_figure.py 35 18     # azimuth, elevation, for the still
