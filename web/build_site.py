@@ -944,16 +944,21 @@ SHELL = """<!DOCTYPE html>
 """
 
 
-def render(slug: str, page: dict, cssv: str, jsv: str) -> str:
+def script_tag(rel: str) -> str:
+    # Versioned by its own file, not by a shared number: editing one script
+    # has to change that script's URL or cached browsers keep the old copy.
+    return f'<script src="{rel}?v={asset_version(rel)}" defer></script>'
+
+
+def render(slug: str, page: dict, cssv: str) -> str:
     has_stage = 'id="fibers"' in page["body"]
-    scripts = (f'<script src="js/fibers.js?v={jsv}" defer></script>'
-               if has_stage else "")
+    scripts = script_tag("js/fibers.js") if has_stage else ""
     if "person-flip" in page["body"]:
-        scripts += f'<script src="js/flip.js?v={jsv}" defer></script>'
+        scripts += script_tag("js/flip.js")
     if 'id="cal-grid"' in page["body"]:
-        scripts += f'<script src="js/calendar.js?v={jsv}" defer></script>'
+        scripts += script_tag("js/calendar.js")
     if 'id="contact-form"' in page["body"]:
-        scripts += f'<script src="js/contact.js?v={jsv}" defer></script>'
+        scripts += script_tag("js/contact.js")
     jsonld = (f'<script type="application/ld+json">{ORG_JSONLD}</script>'
               if slug == "index" else "")
     return SHELL.format(
@@ -980,8 +985,8 @@ def check_links(files: dict) -> list:
 
 
 def main() -> None:
-    cssv, jsv = asset_version("css/style.css"), asset_version("js/fibers.js")
-    docs = {slug: render(slug, page, cssv, jsv) for slug, page in PAGES.items()}
+    cssv = asset_version("css/style.css")
+    docs = {slug: render(slug, page, cssv) for slug, page in PAGES.items()}
 
     broken = check_links(docs)
     if broken:

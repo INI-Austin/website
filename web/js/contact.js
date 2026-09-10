@@ -5,16 +5,19 @@
    is most shared and school machines, could not send anything through the old
    version, and a message that opens someone's mail app has not been sent yet.
 
-   ENDPOINT is FormSubmit, which needs no account: the address in the URL is
-   the destination, and the first submission it ever receives triggers a
-   confirmation email that has to be clicked once before anything is
-   delivered. Once that is done, FormSubmit issues a random string that can be
-   used in place of the address here, which keeps the address out of the page
-   source. Swapping it in changes nothing else. */
+   ENDPOINT is FormSubmit, which needs no account. The random string in it is
+   the token that address was issued once it confirmed it wanted the mail, and
+   it is there in place of the address itself so a bot scraping form endpoints
+   does not walk away with the mailbox. The token is not a credential: it only
+   ever delivers to the one address that activated it.
+
+   TO is still spelled out below, but only inside the message shown when a
+   send fails. A visitor whose submission did not go through is better off
+   being handed somewhere to write than being told to try again. */
 (function () {
   "use strict";
 
-  var ENDPOINT = "https://formsubmit.co/ajax/ini.at.austin@gmail.com";
+  var ENDPOINT = "https://formsubmit.co/ajax/91562740cc391369d10e1d33edaf16f4";
   var TO = "ini.at.austin@gmail.com";
 
   var form = document.getElementById("contact-form");

@@ -38,8 +38,8 @@ class PagesHandler(SimpleHTTPRequestHandler):
         self.send_header("Expires", "0")
         super().end_headers()
 
-    def log_message(self, fmt, *args):
-        sys.stderr.write("%s %s\n" % (self.address_string(), fmt % args))
+    def log_message(self, format: str, *args) -> None:
+        sys.stderr.write("%s %s\n" % (self.address_string(), format % args))
 
 
 if __name__ == "__main__":

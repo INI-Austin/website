@@ -11,34 +11,33 @@ Target mailbox: `ini.at.austin@gmail.com`.
 
 `web/js/contact.js` posts JSON to FormSubmit:
 
-    https://formsubmit.co/ajax/ini.at.austin@gmail.com
+    https://formsubmit.co/ajax/91562740cc391369d10e1d33edaf16f4
 
-FormSubmit needs no account. The address in the URL is the destination, and
-anyone posting to it gets nothing until the address itself confirms once. The
+FormSubmit needs no account. That string is the token the chapter mailbox was
+issued when it confirmed the form, and it only ever delivers to that one
+address, so it is not a credential and belongs in the page source. The
 underscored keys in the request body are theirs: `_subject` sets the subject
 line, `_replyto` makes Reply in the chapter mailbox go to the visitor rather
 than to the relay, `_template` picks the table layout, and `_captcha` is off
 because a challenge cannot be shown from a `fetch`.
 
-## The one step left
+## Status
 
-An activation email has already been sent to `ini.at.austin@gmail.com`. It is
-from FormSubmit and it contains an **Activate Form** button.
+Live. The address confirmed the form, and the endpoint now carries the token it
+was issued rather than the address itself, so a bot scraping form endpoints
+does not walk away with the mailbox.
 
-1. Open that mailbox and click **Activate Form**. Check spam if it is not in
-   the inbox.
-2. The page it opens shows a random string, something like
-   `xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`. That is the form's token.
-3. Optional but worth doing: put the token in `web/js/contact.js` in place of
-   the address, so the mailbox is not sitting in the page source for scrapers
-   to read.
+## It only works from iniaustin.org
 
-       var ENDPOINT = "https://formsubmit.co/ajax/<token>";
+FormSubmit treats every origin as its own form. The token is activated for
+`https://iniaustin.org`, so a submission from there is delivered and a
+submission from `http://localhost:8000` comes back "This form needs
+Activation" and triggers a fresh confirmation email to the chapter mailbox.
 
-   Nothing else changes. Rebuild with `python3 build_site.py` from `web/`.
-
-Until step 1 is done the form answers "Something went wrong sending that" and
-names the address, which is correct: nothing was delivered.
+That is the right behaviour, and it means the contact form is the one thing on
+this site that cannot be tested end to end in local preview. Locally it will
+say the send failed, which is true: it did. Test it on the deployed site
+instead, or ignore the mail if you submit locally by accident.
 
 ## Checking it
 
