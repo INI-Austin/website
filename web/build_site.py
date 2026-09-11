@@ -220,19 +220,43 @@ def figure(path: str, alt: str, caption: str = "", cls: str = "",
             f"{img}{cap}</figure>")
 
 
-def viewer(caption: str, label: str, src: str, height: str = "") -> str:
+def viewer(caption: str, label: str, src: str, height: str = "",
+           poster: str = "", poster_size: tuple = (), live_caption: str = "") -> str:
     """A figure you can turn, rather than a photograph of one.
 
     Both of these are Aleph Neuro's own viewers in an iframe, one served from
     their site and one vendored under web/viewer, so the page never redraws
     their physics itself. `height` is a CSS length the figure is pinned to.
+
+    Given a `poster` the still ships in the HTML and the viewer becomes the
+    upgrade, swapped in by js/viewer.js only where it will actually run. The
+    wave viewer decodes its pressure field from an MP4 through WebCodecs, and
+    WebKit exposes that API but never finishes the decode, so an iPhone draws a
+    head it can turn but a wave that never moves. `live_caption` is the
+    sentence that is only true once the viewer is there, so it stays hidden
+    under the still. A viewer that carries its own data needs none of this and
+    is written straight into the page.
+
+    `poster_size` is the still's pixel dimensions and has to match the file.
+    Without it a lazily loaded image reserves no space, and a figure that is
+    height: auto collapses to nothing until the bytes arrive.
     """
     style = f' style="--viewer-h: {height}"' if height else ""
+    live = (f' <span class="live-only" hidden>{live_caption}</span>'
+            if live_caption else "")
+    if poster:
+        dims = (f' width="{poster_size[0]}" height="{poster_size[1]}"'
+                if poster_size else "")
+        inner = (f'<img src="{esc(poster)}" alt="{esc(label)}"{dims} '
+                 'loading="lazy" decoding="async">')
+        data = f' data-viewer="{esc(src)}" data-label="{esc(label)}"'
+    else:
+        inner = (f'<iframe src="{esc(src)}" title="{esc(label)}" loading="lazy"'
+                 ' allowfullscreen referrerpolicy="no-referrer"></iframe>')
+        data = ""
     return (f'<figure class="fig fig--wide">'
-            f'<div class="viewer"{style}>'
-            f'<iframe src="{esc(src)}" title="{esc(label)}" loading="lazy"'
-            ' allowfullscreen referrerpolicy="no-referrer"></iframe>'
-            f'</div><figcaption>{caption}</figcaption></figure>')
+            f'<div class="viewer"{style}{data}>{inner}</div>'
+            f'<figcaption>{caption}{live}</figcaption></figure>')
 
 
 def people_grid(rows, cols="three"):
@@ -455,13 +479,15 @@ PAGES["research"] = dict(
         + viewer(
             "Ultrasound crossing the skull from a transducer on the temple. "
             "Red and blue are opposite phases of the pressure field, and the "
-            "skull scatters and delays all of it. Drag to turn the head. "
-            "Viewer by "
+            "skull scatters and delays all of it. Viewer by "
             '<a href="https://alephneuro.com/blog/ultrasound-brain" '
             'target="_blank" rel="noreferrer">Aleph Neuro</a>.',
             "Simulated ultrasound propagating through a human head.",
             src="https://alephneuro.com/wave/rdbu.html?embed=1",
-            height="min(74vh, 680px)"))
+            height="min(74vh, 680px)",
+            poster="assets/wave-skull-still.webp",
+            poster_size=(1200, 1455),
+            live_caption="Drag to turn the head."))
     + section(
         "Track D: Hyperflow, driving and measuring glymphatic clearance", "",
         "<p>The glymphatic system is the brain's sleep dependent waste "
@@ -880,6 +906,8 @@ def render(slug: str, page: dict, cssv: str) -> str:
         scripts += script_tag("js/calendar.js")
     if 'id="contact-form"' in page["body"]:
         scripts += script_tag("js/contact.js")
+    if "data-viewer=" in page["body"]:
+        scripts += script_tag("js/viewer.js")
     jsonld = (f'<script type="application/ld+json">{ORG_JSONLD}</script>'
               if slug == "index" else "")
     return SHELL.format(
