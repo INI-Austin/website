@@ -563,10 +563,10 @@ PAGES["research"] = dict(
 # ---- people -----------------------------------------------------------------
 PAGES["people"] = dict(
     title=f"People | {SITE}",
-    desc="Executive board and advisors.",
+    desc="The people who run the chapter, lead its projects and advise it.",
     body=hero("", "Our team", "")
     + section(
-        "Executive Board", "",
+        "Operations", "",
         people_grid([
             dict(name="Shree Rao",
                  photo="assets/people/shree-rao.jpg",
@@ -575,6 +575,27 @@ PAGES["people"] = dict(
                      "the Program of Core Texts and Ideas. Studies cognitive "
                      "control and reading development in late childhood at the "
                      "Developmental Cognitive Neuroscience Lab."),
+            dict(name="Rebekah King",
+                 photo="assets/people/rebekah-king.jpg",
+                 role="Vice President of Education",
+                 bio="B.A. Psychology, class of 2029. Liberal Arts Honors, "
+                     "with a minor in Law, Justice and Society and a "
+                     "certificate in Core Texts and Ideas through the "
+                     "Jefferson Center. Studies the behavioural, demographic "
+                     "and linguistic factors behind early investigative bias "
+                     "at the DynamiCog Lab in the Department of Psychology."),
+            dict(name="Dhaarini Ravisha",
+                 photo="assets/people/dhaarini-ravisha.jpg",
+                 role="Vice President of Finance",
+                 bio="B.B.A., class of 2029, at the McCombs School of "
+                     "Business. Student technician on the College of "
+                     "Education's technology service desk, and a marketing "
+                     "intern with Indian Dance Endeavor of Austin."),
+        ], cols="compact"),
+        ident="operations")
+    + section(
+        "Research", "",
+        people_grid([
             dict(name="Donovan Santine",
                  photo="assets/people/donovan-santine.jpg",
                  role="President of Research",
@@ -584,14 +605,49 @@ PAGES["people"] = dict(
                      "Neuroprosthetics and Brain Interaction Lab. Co-founder "
                      "and CTO of MoltGrid, an open-source AI agent "
                      "infrastructure platform."),
-        ], cols="compact"))
+            dict(name="Shiv Desai",
+                 photo="assets/people/shiv-desai.jpg",
+                 role="Research Lead",
+                 bio="B.S. Computer Science and B.S. Neuroscience, class of "
+                     "2027, in the Neuroscience Scholars program. Builds "
+                     "synthetic fMRI scans with independent component "
+                     "analysis and generative models in the Department of "
+                     "Neuropsychiatry and Neuromodulation at Harvard Medical "
+                     "School and Massachusetts General Hospital, and works on "
+                     "machine learning for neuronal trait prediction in the "
+                     "Department of Neurology at Dell Medical School."),
+            dict(name="Alex Mikhael",
+                 photo="assets/people/alex-mikhael.jpg",
+                 role="Research Lead",
+                 bio="PhD candidate in electrical and computer engineering, "
+                     "developing brain-computer interfaces and stimulation "
+                     "protocols for attention, decision making and error "
+                     "perception in Dr. José del R. Millán's Clinical "
+                     "Neuroprosthetics and Brain Interaction Lab. M.S. from "
+                     "UC San Diego, with earlier work on real-time cortical "
+                     "mapping for 1024-channel ECoG grids at the Integrated "
+                     "Electronics and Biointerfaces Laboratory."),
+        ], cols="compact"),
+        ident="research")
     + section(
         "Advisors", "",
         people_grid([
+            dict(name="Dr. Amir Vokshoor",
+                 photo="assets/people/amir-vokshoor.jpg",
+                 role="Founder, Institute of Neuro Innovation",
+                 bio="Founder and president of the Institute of Neuro "
+                     "Innovation, the foundation this chapter belongs to. "
+                     "Board-certified neurosurgeon, spine surgery subsection "
+                     "chief at Providence Saint John's Health Center in Santa "
+                     "Monica and director of neuroscience at West Hills "
+                     "Hospital. MD with honours from the Medical College of "
+                     "Virginia, residency at Ohio State University Hospitals, "
+                     "and complex spine fellowship training at the University "
+                     "of South Florida."),
             dict(name="Dr. Jordan Amadio",
                  photo="assets/people/jordan-amadio.jpg",
                  role="Faculty Advisor for Research",
-                 bio='Affiliate faculty in the Department of Neurosurgery at '
+                 bio='Full-time faculty in the Department of Neurosurgery at '
                      '<a href="https://dellmed.utexas.edu/directory/jordan-amadio">'
                      'Dell Medical School</a>. Board-certified neurosurgeon, '
                      "NIH-funded investigator in Texas Robotics, and "
@@ -606,6 +662,16 @@ PAGES["people"] = dict(
                  bio="B.S. in Neuroscience from UT Austin, class of 2026. "
                      "Former president of UT Synapse. Currently a teaching "
                      "assistant at the university."),
+            dict(name="PK Tan",
+                 photo="assets/people/pk-tan.jpg",
+                 role="Technical Advisor",
+                 bio="PhD candidate in neuroscience, working on read-write "
+                     "cortical interfaces in Dr. Eyal Seidemann's lab. "
+                     "Combined wide-field calcium imaging with optogenetics "
+                     "to show that stimulating a single cortical column is "
+                     "enough to drive feature-specific perception. B.Sc. in "
+                     "Life Sciences, summa cum laude, from the National "
+                     "University of Singapore."),
         ], cols="compact"),
         ident="advisors"),
 )

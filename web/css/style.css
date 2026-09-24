@@ -611,11 +611,14 @@ ul.plain li::before {
 /* ---------- people ---------- */
 
 /* Cards are centred as a group rather than stretched across the shell: with
-   two or three people a stretched grid leaves one card marooned. */
+   two or three people a stretched grid leaves one card marooned. Flex rather
+   than grid because a grid centres its tracks but still packs the final row
+   from the left, so a fourth person sat alone under the first column. */
 .people-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, 280px);
+  display: flex; flex-wrap: wrap;
   gap: 1.4rem; justify-content: center;
 }
+.people-grid > * { flex: 0 0 280px; max-width: 280px; }
 
 /* Two-sided card. The button is the flip surface; .person-inner is what
    actually rotates, and each face is absolutely positioned on top of it. */
