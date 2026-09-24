@@ -6,8 +6,17 @@ library: the renderers are NumPy rasterisers.
 ## Source data
 
 The scripts read a BIDS dataset mounted locally. Nothing in that dataset is
-committed here, and the paths below are relative to whatever root you point
-the scripts at.
+committed here. Point `dataset.py` at your copy before running anything that
+reads MRI:
+
+    export INI_BIDS_ROOT=/path/to/dataset
+    export INI_BIDS_SUBJECT=sub-01
+
+Anything that works from the `work/*.npz` caches needs neither variable. A
+script that does need them and cannot find them says so and stops, rather
+than failing later on a missing file.
+
+The paths below are relative to `INI_BIDS_ROOT`.
 
 - Diffusion: `derivatives/qsiprep-ABCD/<subject>/dwi/` - preprocessed,
   ACPC-aligned, multi-shell (b = 0/500/1000/2000/3000, 96 directions, 103

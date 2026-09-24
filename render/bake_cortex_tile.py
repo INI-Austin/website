@@ -1,4 +1,4 @@
-"""Bake sub-test3's cortical surface into a seamlessly tiling relight map.
+"""Bake the cortical surface into a seamlessly tiling relight map.
 
 The page background should be the real cortex, not a procedural imitation of
 it, and its lighting should move. Those two wants conflict with shipping a flat

@@ -1,4 +1,4 @@
-"""Isometric render of named anatomical bundles for sub-test3.
+"""Isometric render of named anatomical bundles.
 
 Same depth-slab compositing and illuminated-streamline shading as
 render_iso.py, but colour comes from which tract a streamline belongs to

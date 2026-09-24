@@ -12,8 +12,11 @@ from nibabel.gifti import GiftiImage
 import scipy.io as sio
 from scipy.spatial import KDTree
 
-Q = "$INI_BIDS_ROOT/derivatives/qsiprep-ABCD/sub-test3/anat"
-ANAT = "$INI_BIDS_ROOT/derivatives/fmriprep/sub-test3/anat"
+from dataset import derivatives, subject
+
+Q = derivatives("qsiprep-ABCD")
+ANAT = derivatives("fmriprep")
+SUB = subject()
 FLIP = np.diag([-1.0, -1.0, 1.0])          # RAS <-> LPS
 
 
@@ -54,7 +57,7 @@ def _gifti(path: str) -> GiftiImage:
 def load_surface():
     V, N = [], []
     for h in ("L", "R"):
-        g = _gifti(f"{ANAT}/sub-test3_hemi-{h}_pial.surf.gii")
+        g = _gifti(f"{ANAT}/{SUB}_hemi-{h}_pial.surf.gii")
         v = np.asarray(g.darrays[0].data, np.float64)
         f = np.asarray(g.darrays[1].data, np.int64)
         fn = np.cross(v[f[:, 1]] - v[f[:, 0]], v[f[:, 2]] - v[f[:, 0]])
@@ -80,8 +83,8 @@ def main():
     V, N = load_surface()
     tree = KDTree(V)
 
-    m1 = sio.loadmat(f"{Q}/sub-test3_from-ACPC_to-anat_mode-image_xfm.mat")
-    m2 = sio.loadmat(f"{Q}/sub-test3_from-anat_to-ACPC_mode-image_xfm.mat")
+    m1 = sio.loadmat(f"{Q}/{SUB}_from-ACPC_to-anat_mode-image_xfm.mat")
+    m2 = sio.loadmat(f"{Q}/{SUB}_from-anat_to-ACPC_mode-image_xfm.mat")
     p1 = np.asarray(m1["Euler3DTransform_double_3_3"]).ravel()
     c1 = np.asarray(m1["fixed"]).ravel()
     p2 = np.asarray(m2["Euler3DTransform_double_3_3"]).ravel()

@@ -8,12 +8,15 @@ import sys
 import numpy as np
 import scipy.io as sio
 
-Q = "$INI_BIDS_ROOT/derivatives/qsiprep-ABCD/sub-test3/anat"
+from dataset import derivatives, subject
+
+Q = derivatives("qsiprep-ABCD")
+SUB = subject()
 FLIP = np.diag([-1.0, -1.0, 1.0])
 
 
 def transform():
-    m = sio.loadmat(f"{Q}/sub-test3_from-ACPC_to-anat_mode-image_xfm.mat")
+    m = sio.loadmat(f"{Q}/{SUB}_from-ACPC_to-anat_mode-image_xfm.mat")
     ax, ay, az, tx, ty, tz = np.asarray(m["Euler3DTransform_double_3_3"]).ravel()
     c = np.asarray(m["fixed"]).ravel()[:3]
     cx, cy, cz = np.cos([ax, ay, az])

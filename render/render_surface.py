@@ -1,4 +1,4 @@
-"""Isometric cortical-surface renderer for sub-test3.
+"""Isometric cortical-surface renderer.
 
 Renders the fMRIPrep pial surfaces as a single lit solid. There is no GPU and
 no scene graph here; the whole thing is a vectorised z-buffer:
@@ -23,7 +23,10 @@ import nibabel as nib
 from nibabel.gifti import GiftiImage
 from PIL import Image, ImageFilter
 
-ANAT = "$INI_BIDS_ROOT/derivatives/fmriprep/sub-test3/anat"
+from dataset import derivatives, subject
+
+ANAT = derivatives("fmriprep")
+SUB = subject()
 
 
 def view_matrix(azim_deg: float, elev_deg: float) -> np.ndarray:
@@ -55,11 +58,11 @@ def load_surface(surf: str):
     vs, fs, ss = [], [], []
     base = 0
     for h in ("L", "R"):
-        g = _gifti(f"{ANAT}/sub-test3_hemi-{h}_{surf}.surf.gii")
+        g = _gifti(f"{ANAT}/{SUB}_hemi-{h}_{surf}.surf.gii")
         v = np.asarray(g.darrays[0].data, dtype=np.float32)
         f = np.asarray(g.darrays[1].data, dtype=np.int64) + base
         s = np.asarray(
-            _gifti(f"{ANAT}/sub-test3_hemi-{h}_sulc.shape.gii").darrays[0].data,
+            _gifti(f"{ANAT}/{SUB}_hemi-{h}_sulc.shape.gii").darrays[0].data,
             dtype=np.float32)
         vs.append(v)
         fs.append(f)
