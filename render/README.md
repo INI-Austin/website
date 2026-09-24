@@ -1,37 +1,39 @@
 # INI Austin imagery pipeline
 
-Renders isometric brain imagery from sub-test3's own MRI, for the INI Austin
-site. No GPU and no 3D library: the renderers are NumPy rasterisers.
+Renders isometric brain imagery for the INI Austin site. No GPU and no 3D
+library: the renderers are NumPy rasterisers.
 
 ## Source data
 
-Everything comes from `$INI_BIDS_ROOT`, a BIDS dataset.
+The scripts read a BIDS dataset mounted locally. Nothing in that dataset is
+committed here, and the paths below are relative to whatever root you point
+the scripts at.
 
-- Diffusion: `derivatives/qsiprep-ABCD/sub-test3/dwi/` - preprocessed,
+- Diffusion: `derivatives/qsiprep-ABCD/<subject>/dwi/` - preprocessed,
   ACPC-aligned, multi-shell (b = 0/500/1000/2000/3000, 96 directions, 103
   volumes, 1.7 mm isotropic).
-- Surfaces: `derivatives/fmriprep/sub-test3/anat/` - FreeSurfer pial surfaces
+- Surfaces: `derivatives/fmriprep/<subject>/anat/` - FreeSurfer pial surfaces
   plus sulcal depth, 298,775 vertices over both hemispheres.
 
-sub-test3 had no tractography reconstruction; only sub-test1 and sub-test2 did.
-This pipeline builds one.
+The subject used here had no tractography reconstruction on file, so this
+pipeline builds one.
 
 ## Pipeline
 
     # 1. DWI -> DSI Studio source -> GQI reconstruction
     dsi_studio --action=src --source=dwi.nii.gz --bval=dwi.bval --bvec=dwi.bvec \
-               --output=sub-test3.sz
-    dsi_studio --action=rec --source=sub-test3.sz --method=4 --mask=mask.nii.gz \
+               --output=subject.sz
+    dsi_studio --action=rec --source=subject.sz --method=4 --mask=mask.nii.gz \
                --check_btable=0
 
     # 2a. Whole-brain tractography
-    dsi_studio --action=trk --source=sub-test3.gqi.fz --tract_count=600000 \
+    dsi_studio --action=trk --source=subject.gqi.fz --tract_count=600000 \
                --turning_angle=45 --step_size=0.4 --smoothing=0.8 \
                --min_length=20 --max_length=280 --otsu_threshold=0.45 \
                --check_ending=1 --output=tracts_v2.trk.gz
 
     # 2b. Named bundles by atlas recognition (HCP842), 55 bundles recovered
-    dsi_studio --action=atk --source=sub-test3.gqi.fz --output=atk
+    dsi_studio --action=atk --source=subject.gqi.fz --output=atk
 
     # 3. Caches
     uv run python prep_tracts.py work/tracts_v2.trk.gz work/tracts_v2.npz

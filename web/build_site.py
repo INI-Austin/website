@@ -1,11 +1,11 @@
 """Static generator for the INI Austin site.
 
-Fourteen routes share one header, one footer and one nav. Hand-copying that
-into fourteen files guarantees they drift, and drift is exactly the defect the
-competitive audit found on the sibling chapter's site: a nav item pointing at
-the wrong page, seven orphan pages, four project cards linking to the wrong
-destination. Generating from a single template makes those failures structural
-rather than a matter of vigilance.
+Eleven routes share one header, one footer and one nav. Hand-copying that
+into eleven files guarantees they drift: a nav item pointing at the wrong
+page, an orphan nobody links to, a card whose href no longer matches its
+destination. Generating from a single template, and failing the build on a
+broken internal link, makes those failures structural rather than a matter of
+vigilance.
 
 Content lives in PAGES below. Anything not yet confirmed is wrapped in
 pending() so it renders as a visible marker instead of quietly reading as fact.
@@ -610,13 +610,12 @@ PAGES["people"] = dict(
         ident="advisors"),
 )
 
-# ---- join -------------------------------------------------------------------
 # ---- education --------------------------------------------------------------
 # Education and outreach are placeholders until the officers who own them
 # settle what actually runs. The prose that used to be here (a journal club
 # pattern, an eight-week methods outline, three planned programs) was written
-# for this site rather than agreed by the chapter, so it is in git history at
-# b8f7983 rather than on the page.
+# for this site rather than agreed by the chapter, so it stays in git history
+# rather than on the page.
 PAGES["education"] = dict(
     title=f"Education | {SITE}",
     desc="Chapter education programs.",

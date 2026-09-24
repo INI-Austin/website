@@ -5,8 +5,6 @@ email. It is not a `mailto:` link: a visitor on a machine with no mail client
 configured could not send anything through one of those, and a message that
 merely opens someone's mail app has not been sent.
 
-Target mailbox: `ini.at.austin@gmail.com`.
-
 ## What is wired
 
 `web/js/contact.js` posts JSON to FormSubmit:
@@ -48,3 +46,4 @@ visitor's address in Reply-To.
 The hidden `company` field is a honeypot. A real visitor never sees it, so
 anything in it is a bot; the form reports success and discards the message,
 because telling a bot it failed invites a retry.
+
