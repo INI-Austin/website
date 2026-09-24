@@ -210,7 +210,7 @@ def figure(path: str, alt: str, caption: str = "", cls: str = "",
     can open is a thing they will try to click.
     """
     cap = f"<figcaption>{caption}</figcaption>" if caption else ""
-    img = (f'<img src="{esc(path)}" alt="{esc(alt)}" loading="lazy" '
+    img = (f'<img src="{esc(path)}" alt="{esc(alt)}" loading="lazy" draggable="false" '
            f'decoding="async">')
     if href:
         cls = f"{cls} fig--link".strip()
@@ -251,7 +251,7 @@ def people_grid(rows, cols="three"):
         meta = " &middot; ".join(x for x in [p.get("major", ""), p.get("year", "")] if x)
         initial = p.get("initial") or re.sub(r"<[^>]+>", "", p["name"])[:1].upper()
         photo = p.get("photo")
-        frame = (f'<img src="{esc(photo)}" alt="" loading="lazy">' if photo
+        frame = (f'<img src="{esc(photo)}" alt="" loading="lazy" draggable="false">' if photo
                  else f'<span aria-hidden="true">{esc(initial)}</span>')
         plain = re.sub(r"<[^>]+>", "", p["name"])
         out.append(
@@ -910,7 +910,7 @@ SHELL = """<!DOCTYPE html>
 <header class="site-header">
   <div class="shell nav-wrap">
     <a class="brand" href="/">
-      <img class="brand-lockup" src="assets/ini-logo-white.svg"
+      <img class="brand-lockup" draggable="false" src="assets/ini-logo-white.svg"
            alt="Institute of Neuro Innovation Austin" />
     </a>
     <nav class="site-nav" aria-label="Main">{nav}</nav>

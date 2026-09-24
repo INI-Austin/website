@@ -39,6 +39,11 @@
    it, unsealing it from the top of the window. */
 html { scroll-behavior: smooth; overscroll-behavior-y: none; }
 
+/* Dragging an image lifts a copy of it out of the page, which is not
+   something a headshot on a team page should invite. draggable="false" in
+   the markup covers Firefox; this covers the rest. */
+img { -webkit-user-drag: none; user-drag: none; }
+
 body {
   margin: 0;
   /* A short page used to end its footer halfway down and leave the cortex
@@ -618,7 +623,10 @@ ul.plain li::before {
   display: flex; flex-wrap: wrap;
   gap: 1.4rem; justify-content: center;
 }
-.people-grid > * { flex: 0 0 280px; max-width: 280px; }
+/* Basis is well under the card width so four fit on one row inside the
+   1180px shell, then grow back into it; max-width keeps a row of two or
+   three at the same 280px the rest of the page uses. */
+.people-grid > * { flex: 1 1 240px; max-width: 280px; }
 
 /* Two-sided card. The button is the flip surface; .person-inner is what
    actually rotates, and each face is absolutely positioned on top of it. */
