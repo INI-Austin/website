@@ -40,7 +40,7 @@ def route(slug: str) -> str:
 NAV = [
     (route("about"), "About"),
     (route("research"), "Research"),
-    (route("people"), "People"),
+    (route("team"), "Team"),
     (route("publications"), "Publications"),
     (route("events"), "Events"),
     (route("contact"), "Contact"),
@@ -53,7 +53,7 @@ APPLY_URL = "https://forms.gle/ZNLXi8C9ecE9Mq2SA"
 FOOTER_COLS = [
     ("Chapter", [
         (route("about"), "About"),
-        (route("people"), "People"),
+        (route("team"), "Team"),
         (route("research"), "Research"),
         (APPLY_URL, "Apply"),
     ]),
@@ -560,9 +560,9 @@ PAGES["research"] = dict(
             height="min(78vh, 760px)")),
 )
 
-# ---- people -----------------------------------------------------------------
-PAGES["people"] = dict(
-    title=f"People | {SITE}",
+# ---- team -------------------------------------------------------------------
+PAGES["team"] = dict(
+    title=f"Team | {SITE}",
     desc="The people who run the chapter, lead its projects and advise it.",
     body=hero("", "Our team", "")
     + section(
@@ -957,6 +957,26 @@ def render(slug: str, page: dict, cssv: str) -> str:
         apply_url=APPLY_URL, bodycls=f' class="page-{slug}"')
 
 
+REDIRECTS = {"people": "team"}
+
+
+def redirect_page(slug: str) -> str:
+    """A page that has moved. The meta refresh covers a browser with no
+    JavaScript, the canonical link and noindex tell a crawler to follow the
+    move rather than index the stub, and the visible link covers anyone the
+    other two fail."""
+    target = route(slug)
+    return (
+        "<!doctype html>\n"
+        '<html lang="en"><head><meta charset="utf-8">'
+        '<meta name="robots" content="noindex">'
+        f'<meta http-equiv="refresh" content="0; url={target}">'
+        f'<link rel="canonical" href="{BASE_URL}{target}">'
+        f"<title>Moved to {target}</title></head>"
+        f'<body><p>This page is now at <a href="{target}">{target}</a>.</p>'
+        f"<script>location.replace({target!r})</script></body></html>\n")
+
+
 def check_links(files: dict) -> list:
     """Every internal href must point at a page we actually wrote."""
     known = {route(s) for s in files} | {f"{s}.html" for s in files}
@@ -981,10 +1001,19 @@ def main() -> None:
     for slug, doc in docs.items():
         (OUT / f"{slug}.html").write_text(doc, encoding="utf-8")
 
+    # /people was the team page's address until it was renamed, and it was
+    # public long enough to be linked and indexed. Pages has no server-side
+    # redirect, so the old route stays as a stub that sends a browser on and
+    # tells a crawler where the page really lives. It is written outside the
+    # docs pipeline deliberately: it is not a page, so it should not be link
+    # checked, reported as an orphan, or listed in the sitemap.
+    for old, new in REDIRECTS.items():
+        (OUT / f"{old}.html").write_text(redirect_page(new), encoding="utf-8")
+
     # Priority ranks the pages a search engine should surface first. 404 and
     # privacy are excluded from the sitemap rather than merely deprioritised.
     priority = {"index": "1.0", "research": "0.9", "join": "0.9", "about": "0.8",
-                "people": "0.8", "publications": "0.7", "events": "0.7"}
+                "team": "0.8", "publications": "0.7", "events": "0.7"}
     urls = "".join(
         f"\n  <url><loc>{BASE_URL}{route(s)}</loc>"
         f"<lastmod>{BUILD_DATE}</lastmod>"
