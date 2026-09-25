@@ -762,12 +762,12 @@ ul.plain li::before {
 /* The People page is a centred roster, not a left-aligned document. The
    max-width overrides matter: section p is capped at 46rem for readability,
    which silently off-centres anything shorter than the shell. */
-.page-people .hero-copy { max-width: none; text-align: center; }
-.page-people .hero-copy p { max-width: none; }
-.page-people .hero-actions { justify-content: center; }
-.page-people h2,
-.page-people .section-lede { text-align: center; }
-.page-people .section-lede { max-width: 46rem; margin-left: auto; margin-right: auto; }
+.page-team .hero-copy { max-width: none; text-align: center; }
+.page-team .hero-copy p { max-width: none; }
+.page-team .hero-actions { justify-content: center; }
+.page-team h2,
+.page-team .section-lede { text-align: center; }
+.page-team .section-lede { max-width: 46rem; margin-left: auto; margin-right: auto; }
 
 /* Interior pages carry far less per section than the home page does, so the
    home page's breathing room reads as dead space on them. */

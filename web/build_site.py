@@ -990,6 +990,18 @@ def check_links(files: dict) -> list:
     return bad
 
 
+def check_page_classes(slugs) -> list:
+    """Every .page-<slug> rule must name a page that still exists.
+
+    Each page carries a body class built from its slug, so the stylesheet can
+    hang per-page rules off it. Rename a slug and those rules keep parsing,
+    keep matching nothing, and the page quietly loses whatever they did. That
+    is how /people became /team with its centred headings left behind.
+    """
+    css = (OUT / "css" / "style.css").read_text(encoding="utf-8")
+    return sorted({m for m in re.findall(r"\.page-([a-z0-9-]+)", css)} - set(slugs))
+
+
 def main() -> None:
     cssv = asset_version("css/style.css")
     docs = {slug: render(slug, page, cssv) for slug, page in PAGES.items()}
@@ -997,6 +1009,12 @@ def main() -> None:
     broken = check_links(docs)
     if broken:
         raise SystemExit("broken internal links:\n  " + "\n  ".join(broken))
+
+    stale = check_page_classes(docs)
+    if stale:
+        raise SystemExit(
+            "style.css targets pages that do not exist: "
+            + ", ".join(f".page-{s}" for s in stale))
 
     for slug, doc in docs.items():
         (OUT / f"{slug}.html").write_text(doc, encoding="utf-8")
