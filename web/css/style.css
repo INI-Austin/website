@@ -299,10 +299,15 @@ h1 em { font-style: normal; color: var(--cyan); }
   background: radial-gradient(75% 65% at 38% 50%,
     rgba(4, 9, 26, 0.80), rgba(4, 9, 26, 0.55) 45%, rgba(4, 9, 26, 0) 78%);
 }
+/* The headline is the name spelled out, 39 characters rather than the ten
+   "INI Austin" was, so it is set smaller and allowed to break across three
+   lines. text-wrap: balance keeps those lines close in length instead of
+   leaving one word stranded on the last one. */
 .splash-title {
-  font-size: clamp(3rem, 8vw, 5.5rem);
-  line-height: 1.02; letter-spacing: -.03em; font-weight: 700;
-  margin: 0 0 1rem;
+  font-size: clamp(2.1rem, 5vw, 3.2rem);
+  line-height: 1.08; letter-spacing: -.02em; font-weight: 700;
+  text-wrap: balance;
+  margin: 0 0 1.1rem;
 }
 .splash-sub {
   color: var(--ink-dim); font-size: 1.1rem; line-height: 1.55;

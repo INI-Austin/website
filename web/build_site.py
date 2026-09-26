@@ -19,7 +19,10 @@ import pathlib
 import re
 
 SITE = "INI Austin"
-ORG = "Institute of Neuro Innovation Austin"
+ORG = "Institute of Neuro Innovation at Austin"
+# The tab and the search result carry the full name, the way iniucla.com's
+# do: short name, then what the short name stands for, then where it is.
+TAB = f"{SITE} | Institute of Neuro Innovation | UT Austin"
 OUT = pathlib.Path(__file__).parent
 BASE_URL = "https://iniaustin.org"
 BUILD_DATE = "2026-08-22"
@@ -290,13 +293,13 @@ PAGES = {}
 # The home page is a title card, not a pitch deck: the name, two ways in, and
 # the tractography. Everything else has its own page in the nav.
 PAGES["index"] = dict(
-    title=SITE,
+    title=TAB,
     desc="INI Austin is the University of Texas at Austin chapter of the "
          "Institute of Neuro Innovation.",
     body=f"""
     <section class="splash">
       <div class="splash-copy">
-        <h1 class="splash-title">INI Austin</h1>
+        <h1 class="splash-title">{ORG}</h1>
         <p class="splash-sub">We are currently recruiting top talent for our
           2026-2027 research cohort.</p>
         <div class="hero-actions">
@@ -312,7 +315,7 @@ PAGES["index"] = dict(
 
 # ---- about ------------------------------------------------------------------
 PAGES["about"] = dict(
-    title=f"About | {SITE}",
+    title=f"About | {ORG}",
     desc="What INI Austin is and how it relates to the national foundation.",
     body=section(
         "About Us", "",
@@ -358,7 +361,7 @@ PAGES["about"] = dict(
 # volume is their MIT licensed viewer vendored under web/viewer/ulm and fed the
 # track binary they published.
 PAGES["research"] = dict(
-    title=f"Research | {SITE}",
+    title=f"Research | {ORG}",
     desc="Four neuromodulation tracks, an open index of neurotechnology, and "
          "an imaging direction.",
     body=hero("", "Four pathways in neuromodulation", "")
@@ -562,7 +565,7 @@ PAGES["research"] = dict(
 
 # ---- team -------------------------------------------------------------------
 PAGES["team"] = dict(
-    title=f"Team | {SITE}",
+    title=f"Team | {ORG}",
     desc="The people who run the chapter, lead its projects and advise it.",
     body=hero("", "Our team", "")
     + section(
@@ -683,21 +686,21 @@ PAGES["team"] = dict(
 # for this site rather than agreed by the chapter, so it stays in git history
 # rather than on the page.
 PAGES["education"] = dict(
-    title=f"Education | {SITE}",
+    title=f"Education | {ORG}",
     desc="Chapter education programs.",
     body=coming_soon("Education"),
 )
 
 # ---- outreach ---------------------------------------------------------------
 PAGES["outreach"] = dict(
-    title=f"Outreach | {SITE}",
+    title=f"Outreach | {ORG}",
     desc="Chapter outreach programs.",
     body=coming_soon("Outreach"),
 )
 
 # ---- events -----------------------------------------------------------------
 PAGES["events"] = dict(
-    title=f"Events | {SITE}",
+    title=f"Events | {ORG}",
     desc="Chapter events calendar.",
     body=section(
         "Events", "",
@@ -722,14 +725,14 @@ PAGES["events"] = dict(
 
 # ---- publications -----------------------------------------------------------
 PAGES["publications"] = dict(
-    title=f"Publications | {SITE}",
+    title=f"Publications | {ORG}",
     desc="Chapter publications.",
     body=coming_soon("Publications"),
 )
 
 # ---- contact ----------------------------------------------------------------
 PAGES["contact"] = dict(
-    title=f"Contact | {SITE}",
+    title=f"Contact | {ORG}",
     desc="Get in touch with INI Austin.",
     body=section(
         "Contact Us", "",
@@ -760,7 +763,7 @@ PAGES["contact"] = dict(
 
 # ---- privacy ----------------------------------------------------------------
 PAGES["privacy"] = dict(
-    title=f"Privacy | {SITE}",
+    title=f"Privacy | {ORG}",
     desc="What this site collects, which is almost nothing.",
     body=hero("Privacy", "What this site collects",
               "This is a static site. It sets no cookies, runs no analytics, "
@@ -803,7 +806,7 @@ PAGES["privacy"] = dict(
 
 # ---- 404 --------------------------------------------------------------------
 PAGES["404"] = dict(
-    title=f"Page not found | {SITE}",
+    title=f"Page not found | {ORG}",
     desc="That page does not exist.",
     body=hero("404", "That page does not exist",
               "The link may be old, or it may be wrong. Everything on this site "
@@ -818,7 +821,7 @@ ORG_JSONLD = """{
   "@context": "https://schema.org",
   "@type": "Organization",
   "name": "INI Austin",
-  "alternateName": "Institute of Neuro Innovation Austin",
+  "alternateName": "Institute of Neuro Innovation at Austin",
   "description": "The University of Texas at Austin chapter of the Institute of Neuro Innovation.",
   "foundingDate": "2026",
   "parentOrganization": {
@@ -889,7 +892,7 @@ SHELL = """<!DOCTYPE html>
 <meta property="og:description" content="{desc}" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="{canonical}" />
-<meta property="og:site_name" content="INI Austin" />
+<meta property="og:site_name" content="{org}" />
 <meta property="og:image" content="{base}/assets/og-preview.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
@@ -949,6 +952,7 @@ def render(slug: str, page: dict, cssv: str) -> str:
               if slug == "index" else "")
     return SHELL.format(
         title=html.escape(page["title"], quote=True),
+        org=html.escape(ORG, quote=True),
         desc=html.escape(page["desc"], quote=True),
         cssv=cssv, nav=nav_html(slug), body=page["body"],
         footer=footer_html(), scripts=scripts, jsonld=jsonld,
