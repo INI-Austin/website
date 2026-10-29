@@ -178,6 +178,7 @@ precision highp float;
 
 varying float vSpeed;
 uniform float u_maxSpeed;
+uniform float u_dim;
 
 // Their ramp, and the one the bar beside the figure is drawn from.
 vec3 cmapJet(float t) {
@@ -195,10 +196,67 @@ void main() {
 
   // A flat disc with a soft rim, not a centre bright blob: a bubble is a thing
   // at a place, and a radial falloff makes a crowd of them read as haze.
-  gl_FragColor = vec4(cmapJet(vSpeed / max(u_maxSpeed, 0.001)),
+  gl_FragColor = vec4(u_dim * cmapJet(vSpeed / max(u_maxSpeed, 0.001)),
                       1.0 - smoothstep(0.82, 1.0, r2));
 }
 `;
+
+// ============================================================
+// VesselLayer: the constant vessels
+// ============================================================
+// Every localisation in the recording, drawn once and left in place, dimmed
+// and a little smaller than the bubbles. The bubbles then move through a
+// vessel that is always there, instead of tracing one that fades behind them.
+const VESSEL_DIM = 0.42;
+const VESSEL_SIZE = 0.75;
+
+class VesselLayer {
+  constructor(trackData) {
+    const { totalPoints, pointData, floatsPerPoint: fpp } = trackData;
+    const positions = new Float32Array(totalPoints * 3);
+    const speeds = new Float32Array(totalPoints);
+    const cool = new Float32Array(totalPoints);
+    for (let k = 0; k < totalPoints; k++) {
+      const b = k * fpp;
+      positions[k * 3] = pointData[b];
+      positions[k * 3 + 1] = pointData[b + 1];
+      positions[k * 3 + 2] = pointData[b + 2];
+      speeds[k] = pointData[b + 4];
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute("aSpeed", new THREE.BufferAttribute(speeds, 1));
+    geometry.setAttribute("aCool", new THREE.BufferAttribute(cool, 1));
+    this.uniforms = {
+      u_pointSize: { value: 0.3 },
+      u_pixelRatio: { value: 1.0 },
+      u_maxPoint: { value: 3.0 },
+      u_coolBoost: { value: 1.0 },
+      u_maxSpeed: { value: trackData.maxSpeed },
+      u_dim: { value: VESSEL_DIM },
+    };
+    this.points = new THREE.Points(geometry, new THREE.ShaderMaterial({
+      uniforms: this.uniforms,
+      vertexShader,
+      fragmentShader,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.NormalBlending,
+    }));
+    // Drawn before the bubbles so the moving layer sits on top.
+    this.points.renderOrder = -1;
+  }
+
+  getObject3D() {
+    return this.points;
+  }
+
+  setRenderParams({ pointSize, maxPoint, pixelRatio }) {
+    if (pointSize !== undefined) this.uniforms.u_pointSize.value = pointSize * VESSEL_SIZE;
+    if (maxPoint !== undefined) this.uniforms.u_maxPoint.value = maxPoint * VESSEL_SIZE;
+    if (pixelRatio !== undefined) this.uniforms.u_pixelRatio.value = pixelRatio;
+  }
+}
 
 // ============================================================
 // TrackSystem
@@ -280,6 +338,7 @@ class TrackSystem {
       u_maxPoint: { value: 3.0 },
       u_coolBoost: { value: COOL_BOOST },
       u_maxSpeed: { value: trackData.maxSpeed },
+      u_dim: { value: 1.0 },
     };
 
     this.points = new THREE.Points(geometry, new THREE.ShaderMaterial({
@@ -448,6 +507,7 @@ camera.up.set(0, 0, 1);
 
 let orbitControls = null;
 let trackSystem = null;
+let vesselLayer = null;
 let trackData = null;
 let volume = null;      // { center, size } once the tracks are in
 let userMoved = false;
@@ -579,13 +639,15 @@ function updateScaleBar() {
 function applyParams() {
   if (!trackSystem) return;
   const ratio = renderer.getPixelRatio();
-  trackSystem.setRenderParams({
+  const render = {
     pointSize: params.pointSize,
     pixelRatio: ratio,
     // A bubble may grow a little as the reader zooms in, but not without
     // bound: at 1 / distance it becomes a disc that swallows its own vessel.
     maxPoint: 2.4 * ratio,
-  });
+  };
+  trackSystem.setRenderParams(render);
+  if (vesselLayer) vesselLayer.setRenderParams(render);
 }
 
 async function init() {
@@ -593,6 +655,8 @@ async function init() {
   try {
     trackData = await loadTracks("data/tracks.bin");
 
+    vesselLayer = new VesselLayer(trackData);
+    scene.add(vesselLayer.getObject3D());
     trackSystem = new TrackSystem(trackData);
     scene.add(trackSystem.getObject3D());
 
